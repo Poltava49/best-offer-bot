@@ -82,8 +82,20 @@ class OzonParser:
         for p in range(1, pages + 1):
             logger.info(f"Страница {p}/{pages}")
 
-        print(self.page)
+        product_selectors = [
+            "a[href*='/product/']",
+            ".tile-root a[href*='/product/']",
+            "[data-widget*='searchResults'] a[href*='/product/']",
+            "div a[href*='/product/']"
+        ]
 
+        print(self.page)
+        print(await self.page.wait_for_selector("a[href*='/product/']", timeout=10000))
+        elements = []
+        for selector in product_selectors:
+            found_elements = await self.page.query_selector_all(selector)
+            elements.extend(found_elements)
+        print(elements)
 
 
     async def search_products(self, query, pages=2, max_products=15):
