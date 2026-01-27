@@ -1,0 +1,40 @@
+services:
+  telegram_bot:
+    build: .
+    container_name: telegram_bot
+    image: telegram_bot_app:latest
+    restart: always
+    env_file: src/.env
+    ports:
+      - "5051:8080"
+    depends_on:
+      - postgres
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  postgres:
+    image: postgres:14
+    container_name: postgres_container_bot_offer
+    restart: always
+    env_file: src/.env
+    ports:
+      - "5432:5432"
+    volumes: #том в докере для маппинга
+      - postgres_data:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin_container_bot_offer
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: password
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+volumes:
+  postgres_data:
