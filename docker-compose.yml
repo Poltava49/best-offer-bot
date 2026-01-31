@@ -21,9 +21,14 @@ services:
     restart: always
     env_file: src/.env
     ports:
-      - "5432:5432"
+      - "5430:5430"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: qwerty
+      POSTGRES_DB: parser_bot_db
     volumes: #том в докере для маппинга
       - postgres_data:/var/lib/postgresql/data
+      - ./schema.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin:
     image: dpage/pgadmin4

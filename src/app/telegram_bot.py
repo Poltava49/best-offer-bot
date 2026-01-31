@@ -59,18 +59,23 @@ async def handle_text(update, context):
     await update.message.reply_text(f"Вы сказали: {update.message.text}")
 
 
-def main():
+def build_bot():
+    """Создает и настраивает Telegram бота"""
     app = Application.builder().token(BOT_TOKEN).build()
-
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('parsing', parsing))
     app.add_handler(CommandHandler('info', info))
     app.add_handler(CommandHandler('stop', stop))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
+    logger.info("Бот инициализирован")
+    return app
 
-    logger.info("Бот запущен...")
-    app.run_polling()
 
 
-if __name__ == '__main__':
-    main()
+
+async def run_bot(bot_token: str):
+    """Запускает бота в режиме polling"""
+    app = build_bot(bot_token)
+    logger.info("Бот запущен и ожидает сообщений...")
+    await app.run_polling()
+
