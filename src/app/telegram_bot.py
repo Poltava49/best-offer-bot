@@ -1,10 +1,9 @@
 import os
 import logging
 from telegram.ext import Application, MessageHandler, filters, CommandHandler
-from dotenv import load_dotenv
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 
-load_dotenv('../.env')
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 if not BOT_TOKEN:
