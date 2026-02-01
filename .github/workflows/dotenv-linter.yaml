@@ -11,5 +11,5 @@ jobs:
         with:
           reporter: github-pr-check
           dotenv_linter_flags: --recursive
-          fail_level: none
+          fail_level: error
           filter_mode: nofilter
