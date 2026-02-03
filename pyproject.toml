@@ -8,6 +8,7 @@ dependencies = [
     "aiogram>=3.24.0",
     "async>=0.6.2",
     "dotenv>=0.9.9",
+    "mypy>=1.19.1",
     "playwright>=1.57.0",
     "psycopg>=3.3.2",
     "python-telegram-bot>=22.6",
