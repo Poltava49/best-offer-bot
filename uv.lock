@@ -186,9 +186,13 @@ dependencies = [
     { name = "dotenv" },
     { name = "playwright" },
     { name = "psycopg" },
+    { name = "python-telegram-bot" },
+]
+
+[package.dev-dependencies]
+dev = [
     { name = "pytest" },
     { name = "pytest-asyncio" },
-    { name = "python-telegram-bot" },
 ]
 
 [package.metadata]
@@ -198,9 +202,13 @@ requires-dist = [
     { name = "dotenv", specifier = ">=0.9.9" },
     { name = "playwright", specifier = ">=1.57.0" },
     { name = "psycopg", specifier = ">=3.3.2" },
+    { name = "python-telegram-bot", specifier = ">=22.6" },
+]
+
+[package.metadata.requires-dev]
+dev = [
     { name = "pytest", specifier = ">=9.0.2" },
     { name = "pytest-asyncio", specifier = ">=1.3.0" },
-    { name = "python-telegram-bot", specifier = ">=22.6" },
 ]
 
 [[package]]
