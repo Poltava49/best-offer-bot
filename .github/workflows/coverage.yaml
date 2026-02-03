@@ -28,3 +28,9 @@ jobs:
         with:
           pytest-coverage-path: ./pytest-coverage.txt
           junitxml-path: ./pytest.xml
+
+      - name: Fail if coverage too low
+        if: ${{ steps.coverage.outputs.coverage < '70' }}
+        run: |
+          echo "Coverage below 70%! Failing the workflow."
+          exit 1
