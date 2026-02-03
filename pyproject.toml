@@ -11,4 +11,5 @@ dependencies = [
     "playwright>=1.57.0",
     "psycopg>=3.3.2",
     "python-telegram-bot>=22.6",
+    "ruff>=0.14.14",
 ]
