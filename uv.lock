@@ -187,6 +187,10 @@ dependencies = [
     { name = "playwright" },
     { name = "psycopg" },
     { name = "python-telegram-bot" },
+]
+
+[package.dev-dependencies]
+dev = [
     { name = "ruff" },
 ]
 
@@ -198,8 +202,10 @@ requires-dist = [
     { name = "playwright", specifier = ">=1.57.0" },
     { name = "psycopg", specifier = ">=3.3.2" },
     { name = "python-telegram-bot", specifier = ">=22.6" },
-    { name = "ruff", specifier = ">=0.14.14" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "ruff", specifier = ">=0.14.14" }]
 
 [[package]]
 name = "certifi"
