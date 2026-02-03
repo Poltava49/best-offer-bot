@@ -7,8 +7,18 @@ requires-python = ">=3.12"
 dependencies = [
     "aiogram>=3.24.0",
     "async>=0.6.2",
-    "dotenv>=0.9.9",
     "playwright>=1.57.0",
     "psycopg>=3.3.2",
     "python-telegram-bot>=22.6",
+]
+
+[dependency-groups]
+dev = [
+    "bandit>=1.9.3",
+    "mypy>=1.19.1",
+    "pip-audit>=2.10.0",
+    "pre-commit>=4.5.1",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.14.14",
 ]
