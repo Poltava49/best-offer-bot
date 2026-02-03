@@ -184,10 +184,14 @@ dependencies = [
     { name = "aiogram" },
     { name = "async" },
     { name = "dotenv" },
-    { name = "mypy" },
     { name = "playwright" },
     { name = "psycopg" },
     { name = "python-telegram-bot" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "mypy" },
 ]
 
 [package.metadata]
@@ -195,11 +199,13 @@ requires-dist = [
     { name = "aiogram", specifier = ">=3.24.0" },
     { name = "async", specifier = ">=0.6.2" },
     { name = "dotenv", specifier = ">=0.9.9" },
-    { name = "mypy", specifier = ">=1.19.1" },
     { name = "playwright", specifier = ">=1.57.0" },
     { name = "psycopg", specifier = ">=3.3.2" },
     { name = "python-telegram-bot", specifier = ">=22.6" },
 ]
+
+[package.metadata.requires-dev]
+dev = [{ name = "mypy", specifier = ">=1.19.1" }]
 
 [[package]]
 name = "certifi"
