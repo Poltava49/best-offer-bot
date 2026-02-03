@@ -13,9 +13,9 @@ jobs:
       - name: Ruff format check
         uses: astral-sh/ruff-action@v3
         with:
-          args: format --check -q
+          args: format --check -q src tests
 
       - name: Ruff lint
         uses: astral-sh/ruff-action@v3
         with:
-          args: check -q
+          args: check -q src tests
