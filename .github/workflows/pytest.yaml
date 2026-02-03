@@ -5,7 +5,6 @@ on:
 
 jobs:
   tests:
-    name: tests
     runs-on: ubuntu-latest
 
     steps:
@@ -18,4 +17,6 @@ jobs:
         run: uv sync
 
       - name: Run pytest
-        run: uv run pytest
+        run: |
+          export PYTHONPATH=$PYTHONPATH:$(pwd)/src
+          uv run pytest
