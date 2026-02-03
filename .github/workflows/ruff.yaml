@@ -1,0 +1,21 @@
+name: ruff
+
+on:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ruff format check
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: format --check -q
+
+      - name: Ruff lint
+        uses: astral-sh/ruff-action@v3
+        with:
+          args: check -q
