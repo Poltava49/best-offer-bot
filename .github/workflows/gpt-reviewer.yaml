@@ -17,9 +17,9 @@ jobs:
         with:
           review-command: run-inline
         env:
-          # --- LLM configuration (OpenRouter free model) ---
+          # --- LLM configuration (OpenRouter free models) ---
           LLM__PROVIDER: "OPENAI"
-          LLM__META__MODEL: "qwen/qwen2.5-coder-32b-instruct:free"
+          LLM__META__MODEL: "openrouter/auto"
           LLM__META__MAX_TOKENS: "15000"
           LLM__META__TEMPERATURE: "0.3"
           LLM__HTTP_CLIENT__API_URL: "https://openrouter.ai/api/v1"
@@ -32,4 +32,3 @@ jobs:
           VCS__PIPELINE__PULL_NUMBER: ${{ github.event.pull_request.number }}
           VCS__HTTP_CLIENT__API_URL: "https://api.github.com"
           VCS__HTTP_CLIENT__API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
