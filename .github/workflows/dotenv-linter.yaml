@@ -2,7 +2,6 @@ name: dotenv
 on: [pull_request]
 jobs:
   dotenv-linter:
-    name: runner / dotenv-linter
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
