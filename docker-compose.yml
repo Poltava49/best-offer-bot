@@ -28,7 +28,7 @@ services:
       POSTGRES_DB: parser_bot_db
     volumes: #том в докере для маппинга
       - postgres_data:/var/lib/postgresql/data
-      - .src/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./src/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
 
   pgadmin:
     image: dpage/pgadmin4
