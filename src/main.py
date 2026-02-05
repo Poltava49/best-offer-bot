@@ -1,8 +1,6 @@
-try:
-    from db.database import connect_to_db
-    from app.telegram_bot import run_bot
-except ImportError as e:
-    print(f" Ошибка импорта: {e}")
+from db.database import connect_to_db
+from app.telegram_bot import run_bot
+
 
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")

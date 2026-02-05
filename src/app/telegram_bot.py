@@ -2,6 +2,7 @@ import os
 import logging
 from telegram.ext import Application, MessageHandler, filters, CommandHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from .parsers import wb_parser
 
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
@@ -47,6 +48,9 @@ async def stop(update, context):
 
 
 async def parsing(update, context):
+    query = update.message.text
+    context.user_data['query'] = query
+    await send_dataframe_as_html(user_query=query)
     await update.message.reply_text("Парсинг запущен...", reply_markup=stop_markup)
 
 
@@ -56,6 +60,39 @@ async def info(update, context):
 
 async def handle_text(update, context):
     await update.message.reply_text(f"Вы сказали: {update.message.text}")
+
+
+async def send_dataframe_as_html(query):
+    print(get_products(filename=parse_wb_with_selenium(query='iphone 17 терабайт'), count_products=10))
+    df =
+    html_table = df.to_html(index=False, classes='table table-striped')
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            table {{ border-collapse: collapse; width: 100%; }}
+            th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; }}
+            th {{ background-color: #f2f2f2; }}
+            tr:nth-child(even) {{ background-color: #f9f9f9; }}
+        </style>
+    </head>
+    <body>
+        <h2>Результаты парсинга Wildberries</h2>
+        {html_table}
+    </body>
+    </html>
+    """
+
+    bio = io.BytesIO(html_content.encode('utf-8'))
+    bio.name = 'products.html'
+
+    await update.message.reply_document(
+        document=bio,
+        caption='HTML таблица с товарами'
+    )
+
 
 
 def build_bot():

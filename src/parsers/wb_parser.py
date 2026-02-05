@@ -6,6 +6,7 @@ import time
 import json
 from urllib.parse import quote
 from bs4 import BeautifulSoup
+import pandas as pd
 
 
 
@@ -21,10 +22,10 @@ def parse_wb_with_selenium(query, max_products=10):
 
 
     driver = webdriver.Chrome(options=options)
-    encoded_query = query.replace(' ', '%20')
+
     try:
         # Add URL
-        url = f"https://www.wildberries.ru/catalog/0/search.aspx?search={quote(encoded_query)}"
+        url = f"https://www.wildberries.ru/catalog/0/search.aspx?search={quote(query)}"
         print(f"Открываю: {url}")
         driver.get(url)
 
@@ -37,13 +38,13 @@ def parse_wb_with_selenium(query, max_products=10):
             time.sleep(1)
 
         # Save HTML
-        with open('wb_page.html', 'w', encoding='utf-8') as f:
+        with open('../cache/wb_page.html', 'w', encoding='utf-8') as f:
             f.write(driver.page_source)
         print(f"HTML сохранен в wb_page.html")
     finally:
         driver.quit()
 
-    return 'wb_page.html'
+    return '../cache/wb_page.html'
 
 
 
@@ -55,6 +56,8 @@ def get_products(filename, count_products):
     """
     products_dict = { 'model' : [],
                       'full_title': [],
+                      'rating': [],
+                      'grade': [],
                       'price': [],
                       'url': []
                       }
@@ -64,6 +67,11 @@ def get_products(filename, count_products):
     product_links_title = soup.select('a.product-card__link.j-card-link.j-open-full-product-card')
     brands = soup.select('span.product-card__brand')
     prices = soup.select('ins.price__lower-price.red-price')
+    grades = soup.select('span.product-card__count')
+    grades_counts = [element.text.strip() for element in grades]
+    ratings = soup.select('span.address-rate-mini.address-rate-mini--sm')
+    ratings_list = [element.text.strip() for element in ratings]
+
     for i, product in enumerate(product_links_title):
         if i >= count_products:
             break
@@ -74,16 +82,19 @@ def get_products(filename, count_products):
         # Get brand and price by index
         model = brands[i].text.strip() if i < len(brands) else ''
         price = prices[i].text.strip().replace('\xa0', ' ').replace('₽','').replace(' ','') if i < len(prices) else ''
+        grade = grades_counts[i]
+        rating = ratings_list[i]
 
         products_dict['model'].append(model)
         products_dict['full_title'].append(aria_label)
+        products_dict['rating'].append(rating)
+        products_dict['grade'].append(grade)
         products_dict['price'].append(price)
         products_dict['url'].append(url)
 
-    return products_dict
+    df = pd.DataFrame(products_dict)
+    return df
 
-
-print(get_products(filename=parse_wb_with_selenium(query='iphone 17'), count_products=10))
 
 
 

@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS users (
 -- Таблица логирования парсинга
 CREATE TABLE IF NOT EXISTS parsing_logs (
     id UUID PRIMARY KEY DEFAULT  uuid_generate_v4(),
-    marketplace_id UUID REFERENCES marketplaces(id) ON DELETE SET NULL,
-    product_id UUID REFERENCES products(id) ON DELETE SET NULL
+    marketplace_id UUID ,
+    product_id UUID
 );
 
 
