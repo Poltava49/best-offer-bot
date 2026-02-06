@@ -4,3 +4,4 @@ task.tex
 .env
 .DS_Store
 __pycache__
+.coverage
