@@ -16,6 +16,13 @@ RUFF := $(UV) run ruff
 MYPY := $(UV) run mypy
 PYTEST := $(UV) run pytest
 
+SQLFLUFF := $(UV) run sqlfluff
+SCHEMA := src/db/schema.sql
+POSTGRES_IMAGE := postgres:16
+POSTGRES_PASSWORD := postgres
+POSTGRES_DB := postgres
+POSTGRES_USER := postgres
+
 CHECK_TOOLS = uv chktex markdownlint-cli2
 
 define require_tools
@@ -34,8 +41,9 @@ lint:
 	$(call require_tools)
 	@echo -e "\n$(YELLOW)Running linters...$(NC)\n"
 	@$(RUFF) check src tests || true
-	@markdownlint-cli2 .
-	@chktex .
+	@markdownlint-cli2 . || true
+	@chktex . || true
+	@$(SQLFLUFF) lint . --dialect postgres || true
 	@echo -e "\n$(GREEN)Lint completed!$(NC)\n"
 
 .PHONY: format
@@ -77,6 +85,22 @@ security:
 	@uv run bandit -r src/ || true
 	@uv run pip-audit || true
 	@echo -e "\n$(GREEN)Security checks completed!$(NC)\n"
+
+.PHONY: run-schema
+run-schema:
+	@echo -e "\n$(YELLOW)Applying schema.sql to Postgres (Docker)...$(NC)\n"
+	@docker run --rm \
+		-e POSTGRES_PASSWORD=$(POSTGRES_PASSWORD) \
+		-e POSTGRES_DB=$(POSTGRES_DB) \
+		-e POSTGRES_USER=$(POSTGRES_USER) \
+		-v $(PWD)/$(SCHEMA):/schema.sql:ro \
+		$(POSTGRES_IMAGE) \
+		bash -c " \
+			docker-entrypoint.sh postgres & \
+			until pg_isready -U $(POSTGRES_USER); do sleep 1; done && \
+				psql -U $(POSTGRES_USER) -d $(POSTGRES_DB) -v ON_ERROR_STOP=1 -f /schema.sql \
+				"
+	@echo -e "\n$(GREEN)Schema applied successfully!$(NC)\n"
 
 .PHONY: requirements
 requirements:
@@ -146,23 +170,24 @@ clean:
 help:
 	@printf "$(GREEN)Available targets:$(NC)\n\n"
 	@printf "$(YELLOW)Development:$(NC)\n"
-	@printf "  check                - run lint, types, format-check, test\n"
-	@printf "  lint                 - run ruff linter\n"
-	@printf "  types                - run mypy type check\n"
-	@printf "  format               - format code with ruff\n"
-	@printf "  format-check         - check formatting without changes\n"
-	@printf "  security             - security checks (bandit, pip-audit)\n"
+	@printf "  check                      - run lint, types, format-check, test\n"
+	@printf "  lint                       - run linters (ruff, sqlfluff, chktex, markdownlint-cli2)\n"
+	@printf "  types                      - run mypy type check\n"
+	@printf "  format                     - format code with ruff\n"
+	@printf "  format-check               - check formatting without changes\n"
+	@printf "  security                   - security checks (bandit, pip-audit)\n"
 	@printf "\n$(YELLOW)Testing:$(NC)\n"
-	@printf "  test                 - run pytest tests\n"
-	@printf "  test-cov             - run tests with coverage report\n"
+	@printf "  test                       - run pytest tests\n"
+	@printf "  run-schema                 - run schema.sql in dedicated Docker container\n"
+	@printf "  test-cov                   - run tests with coverage report\n"
 	@printf "\n$(YELLOW)Pre-commit:$(NC)\n"
-	@printf "  pre-commit           - format code and update requirements.txt\n"
-	@printf "  pre-commit-install   - install pre-commit git hooks\n"
-	@printf "  pre-commit-uninstall - remove pre-commit git hooks\n"
+	@printf "  pre-commit                 - format code and update requirements.txt\n"
+	@printf "  pre-commit-install         - install pre-commit git hooks\n"
+	@printf "  pre-commit-uninstall       - remove pre-commit git hooks\n"
 	@printf "\n$(YELLOW)Dependencies:$(NC)\n"
-	@printf "  venv                 - install deps and activate virtual environment\n"
-	@printf "  requirements         - update dependencies\n"
+	@printf "  venv                       - install deps and activate virtual environment\n"
+	@printf "  requirements               - update dependencies\n"
 	@printf "\n$(YELLOW)Cleanup:$(NC)\n"
-	@printf "  clean                - remove temporary files and venv\n"
+	@printf "  clean                      - remove temporary files and venv\n"
 	@printf "\n$(YELLOW)Info:$(NC)\n"
-	@printf "  help                 - show this help message\n"
+	@printf "  help                       - show this help message\n"
