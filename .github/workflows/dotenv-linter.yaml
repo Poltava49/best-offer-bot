@@ -1,4 +1,4 @@
-name: dotenv
+name: dotenv-linter
 on: [pull_request]
 jobs:
   dotenv-linter:
