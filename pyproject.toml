@@ -12,3 +12,8 @@ dependencies = [
     "psycopg>=3.3.2",
     "python-telegram-bot>=22.6",
 ]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.14",
+]
