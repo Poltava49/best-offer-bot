@@ -260,6 +260,7 @@ wheels = [
 filecache = [
     { name = "filelock" },
 ]
+dev = [{ name = "ruff", specifier = ">=0.14.14" }]
 
 [[package]]
 name = "certifi"
