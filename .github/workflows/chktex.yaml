@@ -1,0 +1,16 @@
+name: chktex
+
+on:
+  pull_request:
+
+jobs:
+  chktex:
+    name: chktex
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+      - name: Run ChkTeX
+        uses: j2kun/chktex-action@v2
+        with:
+          lint-all: true

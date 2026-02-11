@@ -1,3 +1,6 @@
+import os
+import asyncio
+
 try:
     from db.database import connect_to_db
     from app.telegram_bot import run_bot
@@ -31,13 +34,7 @@ async def main():
         print(f"Ошибка в боте: {e}")
 
 
-def main():
-    """Точка входа"""
-    asyncio.run(main_async())
-
-
-
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
 
