@@ -1,3 +1,5 @@
+name: sql-check
+
 on:
   pull_request:
 
