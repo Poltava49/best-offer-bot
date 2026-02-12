@@ -64,7 +64,7 @@ format-check:
 .PHONY: types
 types:
 	@echo -e "\n$(YELLOW)Checking types...$(NC)\n"
-	@$(MYPY) --strict src || true
+	@$(MYPY) --strict --disallow-untyped-defs --disallow-incomplete-defs src || true
 	@echo -e "\n$(GREEN)Type check completed!$(NC)\n"
 
 .PHONY: test
