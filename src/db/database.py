@@ -1,10 +1,10 @@
-import psycopg2
+import psycopg
+from psycopg import Connection
 
 
 
-
-def connect_to_db():
-    conn = psycopg2.connect(
+def connect_to_db() -> Connection:
+    conn = psycopg.connect(
         host="localhost",
         port=5430,
         database="parser_bot_db",
@@ -12,4 +12,3 @@ def connect_to_db():
         password="qwerty"
     )
     return conn
-

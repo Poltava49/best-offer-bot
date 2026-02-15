@@ -2,12 +2,13 @@ import os
 import logging
 from telegram.ext import Application, MessageHandler, filters, CommandHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram import Update
+from telegram.ext import ContextTypes
 
-
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-if not BOT_TOKEN:
-    raise ValueError("BOT_TOKEN не найден")
+# BOT_TOKEN = os.getenv("BOT_TOKEN")
+#
+# if not BOT_TOKEN:
+#     raise ValueError("BOT_TOKEN не найден")
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -29,7 +30,7 @@ stop_markup = ReplyKeyboardMarkup(
 )
 
 
-async def start(update, context):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text = (
         "Привет! Я — твой цифровой шпион на маркетплейсах.\n"
         "Я в реальном времени отслеживаю цены на Wildberries и Ozon.\n"
@@ -39,28 +40,28 @@ async def start(update, context):
     await update.message.reply_text(text, reply_markup=start_markup)
 
 
-async def stop(update, context):
+async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "Пока! Клавиатура удалена.",
         reply_markup=ReplyKeyboardRemove()
     )
 
 
-async def parsing(update, context):
+async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Парсинг запущен...", reply_markup=stop_markup)
 
 
-async def info(update, context):
+async def info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Информация о боте...", reply_markup=stop_markup)
 
 
-async def handle_text(update, context):
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(f"Вы сказали: {update.message.text}")
 
 
-def build_bot():
-    """Создает и настраивает Telegram бота"""
-    app = Application.builder().token(BOT_TOKEN).build()
+def build_bot(token) -> Application:
+    """Create and prepare Telegram bot"""
+    app = Application.builder().token(token).build()
     app.add_handler(CommandHandler('start', start))
     app.add_handler(CommandHandler('parsing', parsing))
     app.add_handler(CommandHandler('info', info))
@@ -70,11 +71,8 @@ def build_bot():
     return app
 
 
-
-
 async def run_bot(bot_token: str):
     """Запускает бота в режиме polling"""
     app = build_bot(bot_token)
     logger.info("Бот запущен и ожидает сообщений...")
     await app.run_polling()
-
