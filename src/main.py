@@ -1,22 +1,19 @@
 import os
 import asyncio
+from db.database import connect_to_db
+from app.telegram_bot import run_bot
+from dotenv import load_dotenv
 
-try:
-    from db.database import connect_to_db
-    from app.telegram_bot import run_bot
-except ImportError as e:
-    print(f" Ошибка импорта: {e}")
-
+load_dotenv()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+print(BOT_TOKEN)
 if not BOT_TOKEN:
     print("BOT_TOKEN не найден в .env файле")
 
 
-
-
-async def main():
-    """Асинхронная основная функция"""
+async def main() -> None:
+    """Async main func"""
     print("Запуск бота-парсера маркетплейсов...")
     try:
         conn = connect_to_db()
@@ -25,7 +22,7 @@ async def main():
     except Exception as e:
         print(f"Ошибка подключения к базе - {e}")
 
-    #Запуск бота
+    # Запуск бота
     try:
         await run_bot(BOT_TOKEN)
     except KeyboardInterrupt:
@@ -34,7 +31,5 @@ async def main():
         print(f"Ошибка в боте: {e}")
 
 
-
 if __name__ == "__main__":
     asyncio.run(main())
-
