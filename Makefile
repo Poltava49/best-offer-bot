@@ -70,7 +70,7 @@ types:
 .PHONY: test
 test:
 	@echo -e "\n$(YELLOW)Running tests...$(NC)\n"
-	@$(PYTEST) -v || true
+	@$(PYTEST) -q || true
 	@echo -e "\n$(GREEN)Tests completed!$(NC)\n"
 
 .PHONY: test-cov
