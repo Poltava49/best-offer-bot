@@ -1,32 +1,24 @@
-import os
 import logging
 from telegram.ext import Application, MessageHandler, filters, CommandHandler
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram import Update
 from telegram.ext import ContextTypes
+from src.exceptions import MessageHandlerBotError
+from typing import Any
 
-# BOT_TOKEN = os.getenv("BOT_TOKEN")
-#
-# if not BOT_TOKEN:
-#     raise ValueError("BOT_TOKEN не найден")
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-start_keyboard = [['/parsing', '/info']]
-stop_keyboard = [['/stop']]
+start_keyboard = [["/parsing", "/info"]]
+stop_keyboard = [["/stop"]]
 start_markup = ReplyKeyboardMarkup(
-    keyboard=start_keyboard,
-    resize_keyboard=True,
-    one_time_keyboard=False
+    keyboard=start_keyboard, resize_keyboard=True, one_time_keyboard=False
 )
 stop_markup = ReplyKeyboardMarkup(
-    keyboard=stop_keyboard,
-    resize_keyboard=True,
-    one_time_keyboard=False
+    keyboard=stop_keyboard, resize_keyboard=True, one_time_keyboard=False
 )
 
 
@@ -37,42 +29,62 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Просто скажи, какие товары или артикулы интересуют,\n"
         "и я начну мониторить конкурентов, скидки и динамику. Данные — твоя суперсила!"
     )
+    if not update.message:
+        raise MessageHandlerBotError()
+
     await update.message.reply_text(text, reply_markup=start_markup)
 
 
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message:
+        raise MessageHandlerBotError()
     await update.message.reply_text(
-        "Пока! Клавиатура удалена.",
-        reply_markup=ReplyKeyboardRemove()
+        "Пока! Клавиатура удалена.", reply_markup=ReplyKeyboardRemove()
     )
 
 
 async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message:
+        raise MessageHandlerBotError()
     await update.message.reply_text("Парсинг запущен...", reply_markup=stop_markup)
 
 
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message:
+        raise MessageHandlerBotError()
     await update.message.reply_text("Информация о боте...", reply_markup=stop_markup)
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message:
+        raise MessageHandlerBotError()
     await update.message.reply_text(f"Вы сказали: {update.message.text}")
 
 
-def build_bot(token) -> Application:
+def build_bot(token: str) -> Application[Any, Any, Any, Any, Any, Any]:
     """Create and prepare Telegram bot"""
     app = Application.builder().token(token).build()
-    app.add_handler(CommandHandler('start', start))
-    app.add_handler(CommandHandler('parsing', parsing))
-    app.add_handler(CommandHandler('info', info))
-    app.add_handler(CommandHandler('stop', stop))
+    app.add_handler(CommandHandler("start", start))
+    app.add_handler(CommandHandler("parsing", parsing))
+    app.add_handler(CommandHandler("info", info))
+    app.add_handler(CommandHandler("stop", stop))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
     logger.info("Бот инициализирован")
     return app
 
 
-async def run_bot(bot_token: str):
+async def run_bot(bot_token: str) -> None:
     """Запускает бота в режиме polling"""
     app = build_bot(bot_token)
-    logger.info("Бот запущен и ожидает сообщений...")
-    await app.run_polling()
+    try:
+        logger.info("Бот запущен. Нажмите Ctrl+C для остановки.")
+        app.run_polling()
+    except KeyboardInterrupt:
+        logger.info("Получен сигнал остановки...")
+    except Exception as e:
+        logger.error(f"Ошибка при работе бота: {e}")
+    finally:
+        logger.info("Завершение работы бота...")
+        await app.stop()
+        await app.shutdown()
+        logger.info("Бот остановлен")

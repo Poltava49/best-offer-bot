@@ -1,22 +1,26 @@
 import os
 import asyncio
-from db.database import connect_to_db
-from app.telegram_bot import run_bot
+import sys
+from src.db.database import connect_to_db
+from src.app.telegram_bot import run_bot
 from dotenv import load_dotenv
+from typing import cast
 
 load_dotenv()
 
+
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-print(BOT_TOKEN)
-if not BOT_TOKEN:
+
+if not isinstance(BOT_TOKEN, str):
     print("BOT_TOKEN не найден в .env файле")
+    sys.exit(1)
 
 
 async def main() -> None:
     """Async main func"""
     print("Запуск бота-парсера маркетплейсов...")
     try:
-        conn = connect_to_db()
+        connect_to_db()
         print("Подключение к PostgreSQL успешно!")
 
     except Exception as e:
@@ -24,7 +28,7 @@ async def main() -> None:
 
     # Запуск бота
     try:
-        await run_bot(BOT_TOKEN)
+        await run_bot(cast(str, BOT_TOKEN))
     except KeyboardInterrupt:
         print("Остановка бота...")
     except Exception as e:
