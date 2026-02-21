@@ -1,9 +1,7 @@
 import pytest
-from unittest.mock import AsyncMock, MagicMock
 from telegram import Update, Message
 from telegram.ext import ContextTypes
-from src.app.telegram_bot import start, stop, parsing, info, handle_text, build_bot, run_bot
-from telegram import ReplyKeyboardRemove
+from src.app.telegram_bot import start, stop, parsing, info, handle_text
 
 
 @pytest.fixture
@@ -11,7 +9,7 @@ def mock_update(mocker):
     # Создаём фиктивные методы
     update = mocker.MagicMock(spec=Update)
     mock_message = mocker.AsyncMock(spec=Message)
-    mock_message.reply_text = mocker.AsyncMock()  # Явно создаём AsyncMock
+    mock_message.reply_text = mocker.AsyncMock()
     mock_message.text = "тестовое сообщение"
     update.message = mock_message
     return update
@@ -26,16 +24,16 @@ def mock_context(mocker):
 @pytest.fixture
 def mock_start_markup(mocker):
     # Создаём фиктивную клавиатуру
-    markup = MagicMock()
-    mocker.patch('src.app.telegram_bot.start_markup', markup)
+    markup = mocker.MagicMock()
+    mocker.patch("src.app.telegram_bot.start_markup", markup)
     return markup
 
 
 @pytest.fixture
 def mock_stop_markup(mocker):
     # Фикстура для подмены stop_markup
-    markup = MagicMock()
-    mocker.patch('src.app.telegram_bot.stop_markup', markup)
+    markup = mocker.MagicMock()
+    mocker.patch("src.app.telegram_bot.stop_markup", markup)
     return markup
 
 
@@ -50,7 +48,7 @@ async def test_start_bot(mock_update, mock_context, mock_start_markup):
         "Я в реальном времени отслеживаю цены на Wildberries и Ozon.\n"
         "Просто скажи, какие товары или артикулы интересуют,\n"
         "и я начну мониторить конкурентов, скидки и динамику. Данные — твоя суперсила!",
-        reply_markup=mock_start_markup
+        reply_markup=mock_start_markup,
     )
 
 
@@ -72,8 +70,7 @@ async def test_parsing(mock_update, mock_context, mock_stop_markup):
     """
     await parsing(mock_update, mock_context)
     mock_update.message.reply_text.assert_awaited_once_with(
-        "Парсинг запущен...",
-        reply_markup=mock_stop_markup
+        "Парсинг запущен...", reply_markup=mock_stop_markup
     )
 
 
@@ -84,8 +81,7 @@ async def test_info(mock_update, mock_context, mock_stop_markup):
     """
     await info(mock_update, mock_context)
     mock_update.message.reply_text.assert_awaited_once_with(
-        "Информация о боте...",
-        reply_markup=mock_stop_markup
+        "Информация о боте...", reply_markup=mock_stop_markup
     )
 
 
