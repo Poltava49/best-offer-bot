@@ -8,14 +8,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: Ruff format check
-        uses: astral-sh/ruff-action@v3
-        with:
-          args: format --check -q src tests
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install deps
+        run: uv sync
 
       - name: Ruff lint
-        uses: astral-sh/ruff-action@v3
-        with:
-          args: check -q src tests
+        run: make format-check
