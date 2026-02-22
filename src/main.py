@@ -3,11 +3,7 @@ import asyncio
 import sys
 from src.db.database import connect_to_db
 from src.app.telegram_bot import run_bot
-from dotenv import load_dotenv
 from typing import cast
-
-load_dotenv()
-
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 
