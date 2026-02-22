@@ -56,7 +56,6 @@ format:
 
 .PHONY: format-check
 format-check:
-	$(call require_tools)
 	@echo -e "\n$(YELLOW)Checking formatting...$(NC)\n"
 	@$(RUFF) format --check || true
 	@echo -e "\n$(GREEN)Format check completed!$(NC)\n"
