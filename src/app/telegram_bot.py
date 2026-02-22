@@ -1,10 +1,16 @@
 import logging
-from telegram.ext import Application, MessageHandler, filters, CommandHandler
+from telegram.ext import (
+    Application,
+    ExtBot,
+    JobQueue,
+    MessageHandler,
+    filters,
+    CommandHandler,
+)
+from telegram.ext import ContextTypes
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram import Update
-from telegram.ext import ContextTypes
 from src.exceptions import MessageHandlerBotError
-from typing import Any
 
 
 logging.basicConfig(
@@ -61,7 +67,16 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     await update.message.reply_text(f"Вы сказали: {update.message.text}")
 
 
-def build_bot(token: str) -> Application[Any, Any, Any, Any, Any, Any]:
+def build_bot(
+    token: str,
+) -> Application[
+    ExtBot[None],
+    ContextTypes.DEFAULT_TYPE,
+    dict[Any, Any],
+    dict[Any, Any],
+    dict[Any, Any],
+    JobQueue[ContextTypes.DEFAULT_TYPE],
+]:
     """Create and prepare Telegram bot"""
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start))
