@@ -2,7 +2,6 @@ services:
   telegram_bot:
     build: .
     container_name: telegram_bot
-    image: telegram_bot_app:latest
     restart: always
     env_file: .env
     ports:

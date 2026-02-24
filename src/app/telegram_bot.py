@@ -10,10 +10,8 @@ from telegram.ext import (
 from telegram.ext import ContextTypes
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram import Update
-from src.exceptions import MessageHandlerBotError
+from exceptions import MessageHandlerBotError
 from typing import Any
-
-
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -70,7 +68,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 
 def build_bot(
-    token: str,
+        token: str,
 ) -> Application[
     ExtBot[None],
     ContextTypes.DEFAULT_TYPE,
@@ -86,22 +84,22 @@ def build_bot(
     app.add_handler(CommandHandler("info", info))
     app.add_handler(CommandHandler("stop", stop))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-    logger.info("Бот инициализирован")
+    logger.info("The bot has been initialized")
     return app
 
 
 async def run_bot(bot_token: str) -> None:
-    """Запускает бота в режиме polling"""
+    """Launch the bot in the polling mode"""
     app = build_bot(bot_token)
     try:
-        logger.info("Бот запущен. Нажмите Ctrl+C для остановки.")
+        logger.info("Bot launched. Press Ctrl+C to stop.")
         app.run_polling()
     except KeyboardInterrupt:
-        logger.info("Получен сигнал остановки...")
+        logger.info("Stop signal received...")
     except Exception as e:
-        logger.error(f"Ошибка при работе бота: {e}")
+        logger.error(f"An error occurred while running the bot: {e}")
     finally:
-        logger.info("Завершение работы бота...")
+        logger.info("Bot shutdown...")
         await app.stop()
         await app.shutdown()
-        logger.info("Бот остановлен")
+        logger.info("Bot stopped")
