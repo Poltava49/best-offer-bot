@@ -13,6 +13,7 @@ NC := \033[0m
 PYTHON := python
 UV := uv
 RUFF := $(UV) run ruff
+DOTENV := $(UV) run dotenv-linter
 MYPY := $(UV) run mypy
 PYTEST := $(UV) run pytest
 
@@ -41,6 +42,7 @@ lint:
 	$(call require_tools)
 	@echo -e "\n$(YELLOW)Running linters...$(NC)\n"
 	@$(RUFF) check src tests || true
+	@$(DOTENV) .env .env.example || true
 	@markdownlint-cli2 . || true
 	@chktex . || true
 	@$(SQLFLUFF) lint . --dialect postgres || true
