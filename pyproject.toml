@@ -34,7 +34,8 @@ pythonpath = ["src"]
 mypy_path = ["src"]
 
 [tool.ruff.lint]
-select = ["E", "F", "B", "C", "TRY", "SIM", "UP", "ANN", "N"]
+select = ["ALL"]
+ignore = ["D203", "D212", "COM812", "PLR0913"]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["S101"]
+"tests/**/*.py" = ["S101", "D", "INP001", "ARG001", "ARG002"]
