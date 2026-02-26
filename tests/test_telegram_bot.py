@@ -1,9 +1,10 @@
 import pytest
-from telegram import Update, Message
+from telegram import Message, Update
 from telegram.ext import (
     ContextTypes,
 )
-from app.telegram_bot import start, stop, parsing, info, handle_text
+
+from app.telegram_bot import handle_text, info, parsing, start, stop
 from exceptions import MessageHandlerBotError
 
 
@@ -61,7 +62,7 @@ async def test_stop(mock_update, mock_context) -> None:
     """
     await stop(mock_update, mock_context)
     mock_update.message.reply_text.assert_awaited_once()
-    args, kwargs = mock_update.message.reply_text.await_args
+    args, _kwargs = mock_update.message.reply_text.await_args
     assert args[0] == "Пока! Клавиатура удалена."
     mock_update.message = None
     with pytest.raises(MessageHandlerBotError):
