@@ -1,17 +1,18 @@
 import logging
+from typing import Any
+
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     Application,
+    CommandHandler,
+    ContextTypes,
     ExtBot,
     JobQueue,
     MessageHandler,
     filters,
-    CommandHandler,
 )
-from telegram.ext import ContextTypes
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram import Update
+
 from exceptions import MessageHandlerBotError
-from typing import Any
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -36,14 +37,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "и я начну мониторить конкурентов, скидки и динамику. Данные — твоя суперсила!"
     )
     if not update.message:
-        raise MessageHandlerBotError()
+        raise MessageHandlerBotError
 
     await update.message.reply_text(text, reply_markup=start_markup)
 
 
 async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message:
-        raise MessageHandlerBotError()
+        raise MessageHandlerBotError
     await update.message.reply_text(
         "Пока! Клавиатура удалена.", reply_markup=ReplyKeyboardRemove()
     )
@@ -51,19 +52,19 @@ async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message:
-        raise MessageHandlerBotError()
+        raise MessageHandlerBotError
     await update.message.reply_text("Парсинг запущен...", reply_markup=stop_markup)
 
 
 async def info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message:
-        raise MessageHandlerBotError()
+        raise MessageHandlerBotError
     await update.message.reply_text("Информация о боте...", reply_markup=stop_markup)
 
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message:
-        raise MessageHandlerBotError()
+        raise MessageHandlerBotError
     await update.message.reply_text(f"Вы сказали: {update.message.text}")
 
 
@@ -77,7 +78,7 @@ def build_bot(
     dict[Any, Any],
     JobQueue[ContextTypes.DEFAULT_TYPE],
 ]:
-    """Create and prepare Telegram bot"""
+    """Create and prepare Telegram bot."""
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("parsing", parsing))
@@ -89,7 +90,7 @@ def build_bot(
 
 
 async def run_bot(bot_token: str) -> None:
-    """Launch the bot in the polling mode"""
+    """Launch the bot in the polling mode."""
     app = build_bot(bot_token)
     try:
         logger.info("Bot launched. Press Ctrl+C to stop.")
