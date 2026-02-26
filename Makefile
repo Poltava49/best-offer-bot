@@ -52,9 +52,9 @@ lint:
 format:
 	$(call require_tools)
 	@echo -e "\n$(YELLOW)Formatting code...$(NC)\n"
-	@$(RUFF) format
-	@$(RUFF) check --fix
-	@markdownlint-cli2 . --fix
+	@$(RUFF) format || true
+	@$(RUFF) check --fix -s || true
+	@markdownlint-cli2 . --fix || true
 	@echo -e "\n$(GREEN)Formatting completed!$(NC)\n"
 
 .PHONY: format-check
@@ -66,7 +66,7 @@ format-check:
 .PHONY: types
 types:
 	@echo -e "\n$(YELLOW)Checking types...$(NC)\n"
-	@$(MYPY) --strict --disallow-untyped-defs --disallow-incomplete-defs src || true
+	@$(MYPY) --strict --disallow-untyped-defs --disallow-incomplete-defs src tests || true
 	@echo -e "\n$(GREEN)Type check completed!$(NC)\n"
 
 .PHONY: test
