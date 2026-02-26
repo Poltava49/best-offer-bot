@@ -1,6 +1,8 @@
 import pytest
 from telegram import Update, Message
-from telegram.ext import ContextTypes, Application, CommandHandler, MessageHandler, filters
+from telegram.ext import (
+    ContextTypes,
+)
 from app.telegram_bot import start, stop, parsing, info, handle_text
 from exceptions import MessageHandlerBotError
 
@@ -35,7 +37,7 @@ def mock_stop_markup(mocker):
 
 
 @pytest.mark.asyncio
-async def test_start_bot(mock_update, mock_context, mock_start_markup):
+async def test_start_bot(mock_update, mock_context, mock_start_markup) -> None:
     """
     Сheck starting bot
     """
@@ -53,7 +55,7 @@ async def test_start_bot(mock_update, mock_context, mock_start_markup):
 
 
 @pytest.mark.asyncio
-async def test_stop(mock_update, mock_context):
+async def test_stop(mock_update, mock_context) -> None:
     """
     Check bot stoping
     """
@@ -67,7 +69,7 @@ async def test_stop(mock_update, mock_context):
 
 
 @pytest.mark.asyncio
-async def test_parsing(mock_update, mock_context, mock_stop_markup):
+async def test_parsing(mock_update, mock_context, mock_stop_markup) -> None:
     """
     Check start parsing
     """
@@ -81,7 +83,7 @@ async def test_parsing(mock_update, mock_context, mock_stop_markup):
 
 
 @pytest.mark.asyncio
-async def test_info(mock_update, mock_context, mock_stop_markup):
+async def test_info(mock_update, mock_context, mock_stop_markup) -> None:
     """
     Check pull info  to user
     """
@@ -95,7 +97,7 @@ async def test_info(mock_update, mock_context, mock_stop_markup):
 
 
 @pytest.mark.asyncio
-async def test_handle_text(mock_update, mock_context):
+async def test_handle_text(mock_update, mock_context) -> None:
     """
     Check pull info  to user
     """
