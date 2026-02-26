@@ -17,4 +17,4 @@ jobs:
         run: uv sync
 
       - name: Ruff lint
-        run: make format-check
+        run: uv run ruff check .
