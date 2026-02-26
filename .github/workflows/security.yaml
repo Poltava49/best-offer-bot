@@ -17,4 +17,7 @@ jobs:
         run: uv sync
 
       - name: Run bandit
-        run: make security
+        run: uv run bandit -r src/
+
+      - name: Run pip-audit
+        run: uv run pip-audit
