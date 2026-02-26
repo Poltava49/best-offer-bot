@@ -68,7 +68,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 
 def build_bot(
-        token: str,
+    token: str,
 ) -> Application[
     ExtBot[None],
     ContextTypes.DEFAULT_TYPE,
@@ -97,7 +97,7 @@ async def run_bot(bot_token: str) -> None:
     except KeyboardInterrupt:
         logger.info("Stop signal received...")
     except Exception as e:
-        logger.error(f"An error occurred while running the bot: {e}")
+        logger.exception(f"An error occurred while running the bot: {e}")
     finally:
         logger.info("Bot shutdown...")
         await app.stop()
