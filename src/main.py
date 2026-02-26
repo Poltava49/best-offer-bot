@@ -1,10 +1,11 @@
-import os
 import asyncio
-import sys
-from db.database import connect_to_db
-from app.telegram_bot import run_bot
-from typing import cast
 import logging
+import os
+import sys
+from typing import cast
+
+from app.telegram_bot import run_bot
+from db.database import connect_to_db
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -19,7 +20,7 @@ if not isinstance(BOT_TOKEN, str):
 
 
 async def main() -> None:
-    """Async main func"""
+    """Async main func."""
     logger.info("Launching a marketplace parser bot...")
     try:
         connect_to_db()
@@ -30,7 +31,7 @@ async def main() -> None:
 
     # Запуск бота
     try:
-        await run_bot(cast(str, BOT_TOKEN))
+        await run_bot(cast("str", BOT_TOKEN))
     except KeyboardInterrupt:
         logger.info("Stopping the bot...")
     except Exception as e:
