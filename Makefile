@@ -53,6 +53,7 @@ format:
 	$(call require_tools)
 	@echo -e "\n$(YELLOW)Formatting code...$(NC)\n"
 	@$(RUFF) format
+	@$(RUFF) check --fix
 	@markdownlint-cli2 . --fix
 	@echo -e "\n$(GREEN)Formatting completed!$(NC)\n"
 
