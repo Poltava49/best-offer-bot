@@ -8,9 +8,18 @@ jobs:
     name: chktex
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-      - name: Run ChkTeX
-        uses: j2kun/chktex-action@v2
-        with:
-          lint-all: true
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install deps
+        run: uv sync
+
+      - name: Install chktex
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chktex
+
+      - name: Run chktex
+        run: make chktex

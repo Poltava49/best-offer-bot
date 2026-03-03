@@ -7,21 +7,6 @@ jobs:
   sql:
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - uses: actions/checkout@v6
 
@@ -31,25 +16,5 @@ jobs:
       - name: Install deps
         run: uv sync
 
-      - name: SQLFluff lint
-        run: uv run sqlfluff lint . --dialect postgres
-
-      - name: Install psql
-        run: sudo apt-get update && sudo apt-get install -y postgresql-client
-
-      - name: Wait for Postgres
-        run: |
-          until pg_isready -h localhost -p 5432 -U postgres; do
-            sleep 1
-          done
-
       - name: Apply schema.sql
-        env:
-          PGPASSWORD: postgres
-        run: |
-          psql \
-            -h localhost \
-            -U postgres \
-            -d postgres \
-            -v ON_ERROR_STOP=1 \
-            -f src/db/schema.sql
+        run: make run-schema

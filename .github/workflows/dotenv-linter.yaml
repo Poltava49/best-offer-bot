@@ -4,11 +4,13 @@ jobs:
   dotenv-linter:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install deps
+        run: uv sync
+
       - name: Run dotenv-linter
-        uses: dotenv-linter/action-dotenv-linter@v3
-        with:
-          reporter: github-pr-check
-          dotenv_linter_flags: --recursive
-          fail_level: error
-          filter_mode: nofilter
+        run: make dotenv-linter
