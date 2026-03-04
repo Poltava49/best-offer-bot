@@ -37,7 +37,12 @@ ruff:
 .PHONY: dotenv-linter
 dotenv-linter:
 	@echo -e "\n$(YELLOW)Running dotenv-linter...$(NC)\n"
-	@$(DOTENV) .env .env.example
+	@files=$$(find . -type f -name "*.env*" -print); \
+	if [ -n "$$files" ]; then \
+		$(DOTENV) $$files; \
+	else \
+		echo "No .env files found"; \
+	fi
 
 .PHONY: markdownlint
 markdownlint:
