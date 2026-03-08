@@ -1,10 +1,18 @@
-import os
+"""
+Main entry point for the marketplace parser bot.
+
+This module initializes and runs the Telegram bot,
+handles database connection and manages the main event loop.
+"""
+
 import asyncio
-import sys
-from src.db.database import connect_to_db
-from src.app.telegram_bot import run_bot
-from typing import cast
 import logging
+import os
+import sys
+from typing import cast
+
+from src.app.telegram_bot import run_bot
+from src.db.database import connect_to_db
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -19,22 +27,22 @@ if not isinstance(BOT_TOKEN, str):
 
 
 async def main() -> None:
-    """Async main func"""
+    """Async main func."""
     logger.info("Launching a marketplace parser bot...")
     try:
         connect_to_db()
         logger.info("Connection to PostgreSQL successful!")
 
-    except Exception as e:
-        logger.info(f"Error connecting to database - {e}")
+    except Exception:
+        logger.exception("Error connecting to database %s")
 
     # Start bot
     try:
-        await run_bot(cast(str, BOT_TOKEN))
+        await run_bot(cast("str", BOT_TOKEN))
     except KeyboardInterrupt:
         logger.info("Stopping the bot...")
-    except Exception as e:
-        logger.info(f"Error in bot: {e}")
+    except Exception:
+        logger.exception("Error in bot: %s")
 
 
 if __name__ == "__main__":

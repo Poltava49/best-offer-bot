@@ -16,5 +16,5 @@ jobs:
       - name: Install deps
         run: uv sync
 
-      - name: Run bandit
+      - name: Run security checks
         run: make security
