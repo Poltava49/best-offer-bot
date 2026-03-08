@@ -1,8 +1,9 @@
 import pytest
-from telegram import Update, Message
+from telegram import Update, Message, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import ContextTypes, Application, CommandHandler, MessageHandler, filters
-from app.telegram_bot import start, stop, parsing, info, handle_text
-from exceptions import MessageHandlerBotError
+from src.app.telegram_bot import start, stop, parsing, info, handle_text, build_bot, run_bot
+from src.exceptions import MessageHandlerBotError
+from unittest.mock import MagicMock
 
 
 @pytest.fixture
@@ -21,17 +22,19 @@ def mock_context(mocker):
 
 
 @pytest.fixture
-def mock_start_markup(mocker):
-    markup = mocker.MagicMock()
-    mocker.patch("src.app.telegram_bot.start_markup", markup)
-    return markup
+def mock_start_markup():
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton("/parsing"), KeyboardButton("/info")]],
+        resize_keyboard=True
+    )
 
 
 @pytest.fixture
-def mock_stop_markup(mocker):
-    markup = mocker.MagicMock()
-    mocker.patch("src.app.telegram_bot.stop_markup", markup)
-    return markup
+def mock_stop_markup():
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton("/stop")]],
+        resize_keyboard=True
+    )
 
 
 @pytest.mark.asyncio
@@ -72,12 +75,15 @@ async def test_parsing(mock_update, mock_context, mock_stop_markup):
     Check start parsing
     """
     await parsing(mock_update, mock_context)
-    mock_update.message.reply_text.assert_awaited_once_with(
+    mock_update.message.reply_text.assert_called_once_with(
         "Парсинг запущен...", reply_markup=mock_stop_markup
     )
-    mock_update.message = None
-    with pytest.raises(MessageHandlerBotError):
-        await parsing(mock_update, mock_context)
+    bad_update = MagicMock()
+    bad_update.message = None
+    print(f"bad_update.message = {bad_update.message}")
+
+    with pytest.raises(MessageHandlerBotError) as exc_info:
+        await parsing(bad_update, mock_context)
 
 
 @pytest.mark.asyncio
@@ -86,11 +92,12 @@ async def test_info(mock_update, mock_context, mock_stop_markup):
     Check pull info  to user
     """
     await info(mock_update, mock_context)
-    mock_update.message.reply_text.assert_awaited_once_with(
+    mock_update.message.reply_text.assert_called_once_with(
         "Информация о боте...", reply_markup=mock_stop_markup
     )
+    mock_update = MagicMock()
+    mock_update.message = None
     with pytest.raises(MessageHandlerBotError):
-        mock_update.message = None
         await info(mock_update, mock_context)
 
 
@@ -107,3 +114,80 @@ async def test_handle_text(mock_update, mock_context):
     with pytest.raises(MessageHandlerBotError):
         mock_update.message = None
         await handle_text(mock_update, mock_context)
+
+
+@pytest.mark.asyncio
+async def test_create_and_prepare_bot_simple(mocker):
+    """
+    Simple test for bot creation
+    """
+    mock_app = mocker.MagicMock()
+    mocker.patch('telegram.ext.Application.builder', return_value=mocker.MagicMock(
+        token=lambda x: mocker.MagicMock(build=lambda: mock_app)
+    ))
+    result = build_bot("test_token")
+    assert result is not None
+
+
+@pytest.mark.asyncio
+async def test_run_bot_normal(mocker):
+    """Spec 1: bot work and stop"""
+    mock_app = mocker.MagicMock()
+    mock_app.stop = mocker.AsyncMock()
+    mock_app.shutdown = mocker.AsyncMock()
+
+    mocker.patch('src.app.telegram_bot.build_bot', return_value=mock_app)
+
+    mock_logger = mocker.patch('src.app.telegram_bot.logger')
+
+    await run_bot("test_token")
+
+    mock_app.run_polling.assert_called_once()
+    mock_logger.info.assert_any_call("Bot launched. Press Ctrl+C to stop.")
+    mock_app.stop.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_run_bot_keyboard_interrupt(mocker):
+    """Spec 2: user set Ctrl+C"""
+    mock_app = mocker.MagicMock()
+    # Log when call run_polling, take KeyboardInterrupt
+    mock_app.run_polling.side_effect = KeyboardInterrupt()
+    mock_app.stop = mocker.AsyncMock()
+    mock_app.shutdown = mocker.AsyncMock()
+
+    mocker.patch('src.app.telegram_bot.build_bot', return_value=mock_app)
+    mock_logger = mocker.patch('src.app.telegram_bot.logger')
+
+    await run_bot("test_token")
+    # Check when received Ctrl+C
+    mock_logger.info.assert_any_call("Stop signal received...")
+    mock_app.stop.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_run_bot_error(mocker):
+    """Spec 3: error while works"""
+    mock_app = mocker.MagicMock()
+    error_msg = "Test connection error"
+    mock_app.run_polling.side_effect = Exception(error_msg)
+
+    mock_app.stop = mocker.AsyncMock()
+    mock_app.shutdown = mocker.AsyncMock()
+
+    mocker.patch('src.app.telegram_bot.build_bot', return_value=mock_app)
+    mock_logger = mocker.patch('src.app.telegram_bot.logger')
+
+    await run_bot("test_token")
+
+    # Check correct logs
+    expected_error_msg = f"An error occurred while running the bot: {error_msg}"
+    mock_logger.error.assert_called_once_with(expected_error_msg)
+
+    # Check what bot is stopping 
+    mock_app.stop.assert_called_once()
+    mock_app.shutdown.assert_called_once()
+
+    # Check finish logs
+    mock_logger.info.assert_any_call("Bot shutdown...")
+    mock_logger.info.assert_any_call("Bot stopped")
