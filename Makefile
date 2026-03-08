@@ -13,6 +13,7 @@ NC := \033[0m
 PYTHON := python
 UV := uv
 RUFF := $(UV) run ruff
+DOTENV := $(UV) run dotenv-linter
 MYPY := $(UV) run mypy
 PYTEST := $(UV) run pytest
 
@@ -23,66 +24,86 @@ POSTGRES_PASSWORD := postgres
 POSTGRES_DB := postgres
 POSTGRES_USER := postgres
 
-CHECK_TOOLS = uv chktex markdownlint-cli2
-
-define require_tools
-	@for cmd in $(CHECK_TOOLS); do \
-		if ! which $$cmd >/dev/null 2>&1; then \
-			echo "$(RED)Error: '$$cmd' is not installed. Please install it first.$(NC)"; \
-			exit 1; \
-		fi; \
-	done
-endef
-
-check: lint types format-check test
+check: lint types format-check test security run-schema
 
 .PHONY: lint
-lint:
-	$(call require_tools)
-	@echo -e "\n$(YELLOW)Running linters...$(NC)\n"
-	@$(RUFF) check src tests || true
-	@markdownlint-cli2 . || true
-	@chktex . || true
-	@$(SQLFLUFF) lint . --dialect postgres || true
-	@echo -e "\n$(GREEN)Lint completed!$(NC)\n"
+lint: ruff dotenv-linter markdownlint chktex sqlfluff
+
+.PHONY: ruff
+ruff:
+	@echo -e "\n$(YELLOW)Running ruff...$(NC)\n"
+	@$(RUFF) check src tests
+
+.PHONY: dotenv-linter
+dotenv-linter:
+	@echo -e "\n$(YELLOW)Running dotenv-linter...$(NC)\n"
+	@files=$$(find . -type f -name "*.env*" -print); \
+	if [ -n "$$files" ]; then \
+		$(DOTENV) $$files; \
+	else \
+		echo "No .env files found"; \
+	fi
+
+.PHONY: markdownlint
+markdownlint:
+	@echo -e "\n$(YELLOW)Running markdownlint...$(NC)\n"
+	@which markdownlint-cli2 >/dev/null 2>&1 || { \
+		echo "$(RED)Error: 'markdownlint-cli2' is not installed. Please install it first.$(NC)"; \
+		exit 1; \
+	}
+	@markdownlint-cli2 .
+
+.PHONY: chktex
+chktex:
+	@echo -e "\n$(YELLOW)Running chktex...$(NC)\n"
+	@which chktex >/dev/null 2>&1 || { \
+		echo "$(RED)Error: 'chktex' is not installed. Please install it first.$(NC)"; \
+		exit 1; \
+	}
+	@chktex .
+
+.PHONY: sqlfluff
+sqlfluff:
+	@echo -e "\n$(YELLOW)Running sqlfluff...$(NC)\n"
+	@$(SQLFLUFF) lint . --dialect postgres
 
 .PHONY: format
 format:
-	$(call require_tools)
 	@echo -e "\n$(YELLOW)Formatting code...$(NC)\n"
-	@$(RUFF) format
-	@markdownlint-cli2 . --fix
+	@$(RUFF) format || true
+	@$(RUFF) check --fix -s || true
+	@markdownlint-cli2 . --fix || true
 	@echo -e "\n$(GREEN)Formatting completed!$(NC)\n"
 
 .PHONY: format-check
 format-check:
 	@echo -e "\n$(YELLOW)Checking formatting...$(NC)\n"
-	@$(RUFF) format --check || true
+	@$(RUFF) format --check
 	@echo -e "\n$(GREEN)Format check completed!$(NC)\n"
 
 .PHONY: types
 types:
 	@echo -e "\n$(YELLOW)Checking types...$(NC)\n"
-	@$(MYPY) --strict --disallow-untyped-defs --disallow-incomplete-defs src || true
+	@$(MYPY) --strict --disallow-untyped-defs --disallow-incomplete-defs src tests || true
 	@echo -e "\n$(GREEN)Type check completed!$(NC)\n"
 
 .PHONY: test
 test:
 	@echo -e "\n$(YELLOW)Running tests...$(NC)\n"
-	@$(PYTEST) -q || true
+	@$(PYTEST) -q
 	@echo -e "\n$(GREEN)Tests completed!$(NC)\n"
 
 .PHONY: test-cov
 test-cov:
 	@echo -e "\n$(YELLOW)Running tests with coverage...$(NC)\n"
-	@$(PYTEST) --cov=src --cov-report=term-missing || true
+	@$(PYTEST) --cov=src --cov-report=term-missing:skip-covered --cov-fail-under=70 tests/
 	@echo -e "\n$(GREEN)Coverage test completed!$(NC)\n"
 
 .PHONY: security
 security:
 	@echo -e "\n$(YELLOW)Running security checks...$(NC)\n"
-	@uv run bandit -r src/ || true
-	@uv run pip-audit || true
+	@uv run bandit -r src/
+	@uv run pip-audit
 	@echo -e "\n$(GREEN)Security checks completed!$(NC)\n"
 
 .PHONY: run-schema
@@ -170,7 +191,12 @@ help:
 	@printf "$(GREEN)Available targets:$(NC)\n\n"
 	@printf "$(YELLOW)Development:$(NC)\n"
 	@printf "  check                      - run lint, types, format-check, test\n"
-	@printf "  lint                       - run linters (ruff, sqlfluff, chktex, markdownlint-cli2)\n"
+	@printf "  lint                       - run all linters (ruff, dotenv-linter, markdownlint, chktex, sqlfluff)\n"
+	@printf "  ruff                       - run ruff checks\n"
+	@printf "  dotenv-linter              - run dotenv-linter checks\n"
+	@printf "  markdownlint               - run markdownlint checks\n"
+	@printf "  chktex                     - run chktex checks\n"
+	@printf "  sqlfluff                   - run sqlfluff checks\n"
 	@printf "  types                      - run mypy type check\n"
 	@printf "  format                     - format code with ruff\n"
 	@printf "  format-check               - check formatting without changes\n"

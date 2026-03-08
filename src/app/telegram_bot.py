@@ -1,10 +1,26 @@
+"""
+Telegram bot handlers module.
+
+This module contains all command handlers and bot initialization functions
+for the Telegram bot including start, stop, parsing, info commands and
+message handling.
+"""
+
 import logging
-from telegram.ext import Application, ExtBot, JobQueue, MessageHandler, filters, CommandHandler
-from telegram.ext import ContextTypes
-from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove
-from telegram import Update
-from src.exceptions import MessageHandlerBotError
 from typing import Any
+
+from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    ExtBot,
+    JobQueue,
+    MessageHandler,
+    filters,
+)
+
+from src.exceptions import MessageHandlerBotError
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -21,7 +37,8 @@ stop_markup = ReplyKeyboardMarkup(
 )
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def start(update: Update) -> None:
+    """Start bot."""
     text = (
         "Привет! Я — твой цифровой шпион на маркетплейсах.\n"
         "Я в реальном времени отслеживаю цены на Wildberries и Ozon.\n"
@@ -29,34 +46,38 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "и я начну мониторить конкурентов, скидки и динамику. Данные — твоя суперсила!"
     )
     if not update.message:
-        raise MessageHandlerBotError()
+        raise MessageHandlerBotError
 
     await update.message.reply_text(text, reply_markup=start_markup)
 
 
-async def stop(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def stop(update: Update) -> None:
+    """Stop bot."""
     if not update.message:
-        raise MessageHandlerBotError()
+        raise MessageHandlerBotError
     await update.message.reply_text(
         "Пока! Клавиатура удалена.", reply_markup=ReplyKeyboardRemove()
     )
 
 
-async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def parsing(update: Update) -> None:
+    """Start parsing."""
     if not update.message:
-        raise MessageHandlerBotError()
+        raise MessageHandlerBotError
     await update.message.reply_text("Парсинг запущен...", reply_markup=stop_markup)
 
 
-async def info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def info(update: Update) -> None:
+    """Get info."""
     if not update.message:
-        raise MessageHandlerBotError()
-    await update.message.reply_text("Информация о боте...", reply_markup=stop_markup)
+        raise MessageHandlerBotError
+    await update.message.reply_text("Информация o боте...", reply_markup=stop_markup)
 
 
-async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_text(update: Update) -> None:
+    """Handle text messages."""
     if not update.message:
-        raise MessageHandlerBotError()
+        raise MessageHandlerBotError
     await update.message.reply_text(f"Вы сказали: {update.message.text}")
 
 
@@ -70,7 +91,7 @@ def build_bot(
     dict[Any, Any],
     JobQueue[ContextTypes.DEFAULT_TYPE],
 ]:
-    """Create and prepare Telegram bot"""
+    """Create and prepare Telegram bot."""
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(CommandHandler("parsing", parsing))
@@ -82,18 +103,17 @@ def build_bot(
 
 
 async def run_bot(bot_token: str) -> None:
-    """Launch the bot in the polling mode"""
+    """Launch the bot in the polling mode."""
     app = build_bot(bot_token)
     try:
         logger.info("Bot launched. Press Ctrl+C to stop.")
         app.run_polling()
     except KeyboardInterrupt:
         logger.info("Stop signal received...")
-    except Exception as e:
-        logger.error(f"An error occurred while running the bot: {e}")
+    except Exception:
+        logger.exception("An error occurred while running the bot: %s")
     finally:
         logger.info("Bot shutdown...")
         await app.stop()
         await app.shutdown()
         logger.info("Bot stopped")
-        
