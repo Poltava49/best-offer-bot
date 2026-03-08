@@ -1,8 +1,8 @@
 import os
 import asyncio
 import sys
-from db.database import connect_to_db
-from app.telegram_bot import run_bot
+from src.db.database import connect_to_db
+from src.app.telegram_bot import run_bot
 from typing import cast
 import logging
 
@@ -28,7 +28,7 @@ async def main() -> None:
     except Exception as e:
         logger.info(f"Error connecting to database - {e}")
 
-    # Запуск бота
+    # Start bot
     try:
         await run_bot(cast(str, BOT_TOKEN))
     except KeyboardInterrupt:
