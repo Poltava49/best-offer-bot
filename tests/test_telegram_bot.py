@@ -1,8 +1,9 @@
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from pytest_mock import MockerFixture
 from telegram import KeyboardButton, Message, ReplyKeyboardMarkup, Update
+from telegram.ext import ContextTypes
 
 from src.app.telegram_bot import (
     build_bot,
@@ -17,9 +18,17 @@ from src.exceptions import MessageHandlerBotError
 
 
 @pytest.fixture
-def mock_update(mocker: MockerFixture) -> None:
-    update = mocker.MagicMock(spec=Update)
-    mock_message = mocker.AsyncMock(spec=Message)
+def mock_context(mocker: MockerFixture) -> MagicMock:
+    """Create mock Telegram context."""
+    context: MagicMock = mocker.MagicMock(spec=ContextTypes.DEFAULT_TYPE)
+    return context
+
+
+@pytest.fixture
+def mock_update(mocker: MockerFixture) -> MagicMock:
+    """Create mock Telegram update."""
+    update: MagicMock = mocker.MagicMock(spec=Update)
+    mock_message: AsyncMock = mocker.AsyncMock(spec=Message)
     mock_message.reply_text = mocker.AsyncMock()
     mock_message.text = "тестовое сообщение"
     update.message = mock_message
@@ -44,12 +53,13 @@ def mock_stop_markup() -> ReplyKeyboardMarkup:
 @pytest.mark.asyncio
 async def test_start_bot(
         mock_update: MagicMock,
+        mock_context: MagicMock,
         mock_start_markup: ReplyKeyboardMarkup
 ) -> None:
     """
     Check starting bot.
     """
-    await start(mock_update)
+    await start(mock_update, mock_context)
     mock_update.message.reply_text.assert_awaited_once_with(
         "Привет! Я — твой цифровой шпион на маркетплейсах.\n"
         "Я в реальном времени отслеживаю цены на Wildberries и Ozon.\n"
@@ -60,32 +70,33 @@ async def test_start_bot(
 
     mock_update.message = None
     with pytest.raises(MessageHandlerBotError):
-        await start(mock_update)
+        await start(mock_update, mock_context)
 
 
 @pytest.mark.asyncio
-async def test_stop(mock_update: MagicMock) -> None:
+async def test_stop(mock_update: MagicMock, mock_context: MagicMock) -> None:
     """
     Check bot stoping
     """
-    await stop(mock_update)
+    await stop(mock_update, mock_context)
     mock_update.message.reply_text.assert_awaited_once()
     args, _kwargs = mock_update.message.reply_text.await_args
     assert args[0] == "Пока! Клавиатура удалена."
     mock_update.message = None
     with pytest.raises(MessageHandlerBotError):
-        await stop(mock_update)
+        await stop(mock_update, mock_context)
 
 
 @pytest.mark.asyncio
 async def test_parsing(
         mock_update: MagicMock,
+        mock_context: MagicMock,
         mock_stop_markup: ReplyKeyboardMarkup
 ) -> None:
     """
     Check start parsing.
     """
-    await parsing(mock_update)
+    await parsing(mock_update, mock_context)
     mock_update.message.reply_text.assert_called_once_with(
         "Парсинг запущен...",
         reply_markup=mock_stop_markup
@@ -94,18 +105,19 @@ async def test_parsing(
     bad_update = MagicMock()
     bad_update.message = None
     with pytest.raises(MessageHandlerBotError):
-        await parsing(bad_update)
+        await parsing(bad_update, mock_context)
 
 
 @pytest.mark.asyncio
 async def test_info(
         mock_update: MagicMock,
+        mock_context: MagicMock,
         mock_stop_markup: ReplyKeyboardMarkup
 ) -> None:
     """
     Check pull info to user.
     """
-    await info(mock_update)
+    await info(mock_update, mock_context)
     mock_update.message.reply_text.assert_called_once_with(
         "Информация o боте...",
         reply_markup=mock_stop_markup
@@ -114,22 +126,22 @@ async def test_info(
     bad_update = MagicMock()
     bad_update.message = None
     with pytest.raises(MessageHandlerBotError):
-        await info(bad_update)
+        await info(bad_update, mock_context)
 
 
 @pytest.mark.asyncio
-async def test_handle_text(mock_update: MagicMock) -> None:
+async def test_handle_text(mock_update: MagicMock, mock_context: MagicMock) -> None:
     """
     Check pull info  to user
     """
     text_message = "тестовое сообщение"
-    await handle_text(mock_update)
+    await handle_text(mock_update, mock_context)
     mock_update.message.reply_text.assert_awaited_once_with(
         f"Вы сказали: {text_message}"
     )
     mock_update.message = None
     with pytest.raises(MessageHandlerBotError):
-        await handle_text(mock_update)
+        await handle_text(mock_update, mock_context)
 
 
 @pytest.mark.asyncio
