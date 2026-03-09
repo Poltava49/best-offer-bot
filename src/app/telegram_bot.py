@@ -37,7 +37,7 @@ stop_markup = ReplyKeyboardMarkup(
 )
 
 
-async def start(update: Update) -> None:
+async def start(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     """Start bot."""
     text = (
         "Привет! Я — твой цифровой шпион на маркетплейсах.\n"
@@ -51,7 +51,7 @@ async def start(update: Update) -> None:
     await update.message.reply_text(text, reply_markup=start_markup)
 
 
-async def stop(update: Update) -> None:
+async def stop(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     """Stop bot."""
     if not update.message:
         raise MessageHandlerBotError
@@ -60,21 +60,21 @@ async def stop(update: Update) -> None:
     )
 
 
-async def parsing(update: Update) -> None:
+async def parsing(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     """Start parsing."""
     if not update.message:
         raise MessageHandlerBotError
     await update.message.reply_text("Парсинг запущен...", reply_markup=stop_markup)
 
 
-async def info(update: Update) -> None:
+async def info(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     """Get info."""
     if not update.message:
         raise MessageHandlerBotError
     await update.message.reply_text("Информация o боте...", reply_markup=stop_markup)
 
 
-async def handle_text(update: Update) -> None:
+async def handle_text(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle text messages."""
     if not update.message:
         raise MessageHandlerBotError
