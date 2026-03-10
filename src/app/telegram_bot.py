@@ -82,7 +82,7 @@ async def handle_text(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
 
 
 def build_bot(
-        token: str,
+    token: str,
 ) -> Application[
     ExtBot[None],
     ContextTypes.DEFAULT_TYPE,
