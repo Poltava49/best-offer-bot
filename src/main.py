@@ -36,7 +36,6 @@ async def main() -> None:
     except Exception:
         logger.exception("Error connecting to database %s")
 
-    # Start bot
     try:
         await run_bot(cast("str", BOT_TOKEN))
     except KeyboardInterrupt:

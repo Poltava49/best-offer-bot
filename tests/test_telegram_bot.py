@@ -52,9 +52,9 @@ def mock_stop_markup() -> ReplyKeyboardMarkup:
 
 @pytest.mark.asyncio
 async def test_start_bot(
-        mock_update: MagicMock,
-        mock_context: MagicMock,
-        mock_start_markup: ReplyKeyboardMarkup
+    mock_update: MagicMock,
+    mock_context: MagicMock,
+    mock_start_markup: ReplyKeyboardMarkup,
 ) -> None:
     """
     Check starting bot.
@@ -89,17 +89,16 @@ async def test_stop(mock_update: MagicMock, mock_context: MagicMock) -> None:
 
 @pytest.mark.asyncio
 async def test_parsing(
-        mock_update: MagicMock,
-        mock_context: MagicMock,
-        mock_stop_markup: ReplyKeyboardMarkup
+    mock_update: MagicMock,
+    mock_context: MagicMock,
+    mock_stop_markup: ReplyKeyboardMarkup,
 ) -> None:
     """
     Check start parsing.
     """
     await parsing(mock_update, mock_context)
     mock_update.message.reply_text.assert_called_once_with(
-        "Парсинг запущен...",
-        reply_markup=mock_stop_markup
+        "Парсинг запущен...", reply_markup=mock_stop_markup
     )
 
     bad_update = MagicMock()
@@ -110,17 +109,16 @@ async def test_parsing(
 
 @pytest.mark.asyncio
 async def test_info(
-        mock_update: MagicMock,
-        mock_context: MagicMock,
-        mock_stop_markup: ReplyKeyboardMarkup
+    mock_update: MagicMock,
+    mock_context: MagicMock,
+    mock_stop_markup: ReplyKeyboardMarkup,
 ) -> None:
     """
     Check pull info to user.
     """
     await info(mock_update, mock_context)
     mock_update.message.reply_text.assert_called_once_with(
-        "Информация o боте...",
-        reply_markup=mock_stop_markup
+        "Информация o боте...", reply_markup=mock_stop_markup
     )
 
     bad_update = MagicMock()
