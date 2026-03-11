@@ -13,6 +13,7 @@ from typing import cast
 
 from src.app.telegram_bot import run_bot
 from src.db.database import connect_to_db
+from src.exceptions import DatabaseConnectionError
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -33,7 +34,7 @@ async def main() -> None:
         connect_to_db()
         logger.info("Connection to PostgreSQL successful!")
 
-    except Exception:
+    except DatabaseConnectionError:
         logger.exception("Error connecting to database %s")
 
     try:
