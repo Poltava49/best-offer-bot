@@ -5,3 +5,4 @@ task.tex
 .DS_Store
 __pycache__
 .coverage
+.html

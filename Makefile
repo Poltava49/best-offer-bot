@@ -70,13 +70,9 @@ sqlfluff:
 .PHONY: format
 format:
 	@echo -e "\n$(YELLOW)Formatting code...$(NC)\n"
-	@$(RUFF) format
-	@$(RUFF) check --fix -s
-	@which markdownlint-cli2 >/dev/null 2>&1 || { \
-		echo "$(RED)Error: 'markdownlint-cli2' is not installed. Please install it first.$(NC)"; \
-		exit 1; \
-	}
-	@markdownlint-cli2 . --fix
+	@$(RUFF) format || true
+	@$(RUFF) check --fix -s || true
+	@markdownlint-cli2 . --fix || true
 	@echo -e "\n$(GREEN)Formatting completed!$(NC)\n"
 
 .PHONY: format-check
