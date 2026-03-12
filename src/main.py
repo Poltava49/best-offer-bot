@@ -1,40 +1,49 @@
-import os
+"""
+Main entry point for the marketplace parser bot.
+
+This module initializes and runs the Telegram bot,
+handles database connection and manages the main event loop.
+"""
+
 import asyncio
+import logging
+import os
+import sys
+from typing import cast
 
-try:
-    from db.database import connect_to_db
-    from app.telegram_bot import run_bot
-except ImportError as e:
-    print(f" Ошибка импорта: {e}")
+from src.app.telegram_bot import run_bot
+from src.db.database import connect_to_db
+from src.exceptions import DatabaseConnectionError
 
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-if not BOT_TOKEN:
-    print("BOT_TOKEN не найден в .env файле")
+
+if not isinstance(BOT_TOKEN, str):
+    logger.info("BOT_TOKEN not found in .env file")
+    sys.exit(1)
 
 
-
-
-async def main():
-    """Асинхронная основная функция"""
-    print("Запуск бота-парсера маркетплейсов...")
+async def main() -> None:
+    """Async main func."""
+    logger.info("Launching a marketplace parser bot...")
     try:
-        conn = connect_to_db()
-        print("Подключение к PostgreSQL успешно!")
+        connect_to_db()
+        logger.info("Connection to PostgreSQL successful!")
 
-    except Exception as e:
-        print(f"Ошибка подключения к базе - {e}")
+    except DatabaseConnectionError:
+        logger.exception("Error connecting to database %s")
 
-    #Запуск бота
     try:
-        await run_bot(BOT_TOKEN)
+        await run_bot(cast("str", BOT_TOKEN))
     except KeyboardInterrupt:
-        print("Остановка бота...")
-    except Exception as e:
-        print(f"Ошибка в боте: {e}")
-
+        logger.info("Stopping the bot...")
+    except Exception:
+        logger.exception("Error in bot: %s")
 
 
 if __name__ == "__main__":
     asyncio.run(main())
-

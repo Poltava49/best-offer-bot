@@ -14,4 +14,4 @@ COPY . .
 RUN pip install --no-cache-dir uv \
     && uv pip install --system --no-cache .
 
-CMD ["python", "src/app/telegram_bot.py"]
+CMD ["python", "-m", "src.main"]
