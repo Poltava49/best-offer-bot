@@ -13,6 +13,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    shm_size: 2gb
 
   postgres:
     image: postgres:14
@@ -20,7 +21,7 @@ services:
     restart: always
     env_file: .env
     ports:
-      - "5430:5430"
+      - "5432:5432"
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: qwerty

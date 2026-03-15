@@ -6,6 +6,7 @@ for the Telegram bot including start, stop, parsing, info commands and
 message handling.
 """
 
+import asyncio
 import logging
 from typing import Any
 
@@ -21,6 +22,7 @@ from telegram.ext import (
 )
 
 from src.exceptions import MessageHandlerBotError
+from src.parsers.wb import start_parsing_wb
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -60,11 +62,19 @@ async def stop(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-async def parsing(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start parsing."""
     if not update.message:
         raise MessageHandlerBotError
-    await update.message.reply_text("Парсинг запущен...", reply_markup=stop_markup)
+    query = context.user_data.get("last_message") if context.user_data else None
+    if not query or not isinstance(query, str):
+        await update.message.reply_text("Нет сохраненного запроса")
+        return
+    await update.message.reply_text(
+        "Start parsing Wildberries...", reply_markup=stop_markup
+    )
+    df = await start_parsing_wb(query=query, count_products=5)
+    await update.message.reply_text(f"result:\n{df.to_string()}")
 
 
 async def info(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -74,15 +84,20 @@ async def info(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Информация o боте...", reply_markup=stop_markup)
 
 
-async def handle_text(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle text messages."""
     if not update.message:
         raise MessageHandlerBotError
+    if context.user_data is None:
+        context.user_data = {}
+    context.user_data["last_message"] = update.message.text
+    if update.effective_chat:
+        context.user_data["chat_id"] = update.effective_chat.id
     await update.message.reply_text(f"Вы сказали: {update.message.text}")
 
 
 def build_bot(
-    token: str,
+        token: str,
 ) -> Application[
     ExtBot[None],
     ContextTypes.DEFAULT_TYPE,
@@ -106,8 +121,12 @@ async def run_bot(bot_token: str) -> None:
     """Launch the bot in the polling mode."""
     app = build_bot(bot_token)
     try:
+        await app.initialize()
+        await app.start()
         logger.info("Bot launched. Press Ctrl+C to stop.")
-        app.run_polling()
+        await app.updater.start_polling()
+        while True:
+            await asyncio.sleep(1)
     except KeyboardInterrupt:
         logger.info("Stop signal received...")
     except Exception:
