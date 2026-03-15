@@ -32,10 +32,19 @@ def _parse_wb_with_selenium(query: str) -> str:
     """Parse HTML page Wildberries by Selenium."""
     options = webdriver.ChromeOptions()
     options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-webrtc")
+    options.add_argument("--hide-scrollbars")
+    options.add_argument("--disable-notifications")
+    options.add_argument("--start-maximized")
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", value=False)
 
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Remote(
+        command_executor="http://selenium:4444/wd/hub", options=options
+    )
     encoded_query = query.replace(" ", "%20")
     try:
         # Add URL
@@ -103,3 +112,4 @@ async def start_parsing_wb(query: str, count_products: int = 10) -> DataFrame:
     """Async call corotine."""
     filename = await parse_wb(query=query)
     return get_products(filename=filename, count_products=count_products)
+
