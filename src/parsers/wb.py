@@ -45,10 +45,9 @@ def _parse_wb_with_selenium(query: str) -> str:
     driver = webdriver.Remote(
         command_executor="http://selenium:4444/wd/hub", options=options
     )
-    encoded_query = query.replace(" ", "%20")
     try:
         # Add URL
-        url = f"https://www.wildberries.ru/catalog/0/search.aspx?search={quote(encoded_query)}"
+        url = f"https://www.wildberries.ru/catalog/0/search.aspx?search={quote(query)}"
         driver.get(url)
         logger.info("Open search - %url")
 
@@ -104,7 +103,6 @@ def get_products(filename: str, count_products: int = 10) -> DataFrame:
         products_dict["full_title"].append(aria_label)
         products_dict["price"].append(price)
         products_dict["url"].append(url)
-
     return pd.DataFrame(products_dict)
 
 
@@ -112,4 +110,3 @@ async def start_parsing_wb(query: str, count_products: int = 10) -> DataFrame:
     """Async call corotine."""
     filename = await parse_wb(query=query)
     return get_products(filename=filename, count_products=count_products)
-

@@ -171,9 +171,9 @@ async def test_run_bot_normal(mocker: MockerFixture) -> None:
 
     await run_bot("test_token")
 
-    mock_app.run_polling.assert_called_once()
-    mock_logger.info.assert_any_call("Bot launched. Press Ctrl+C to stop.")
+    mock_logger.info.assert_any_call("Stop signal received...")
     mock_app.stop.assert_called_once()
+    mock_app.shutdown.assert_called_once()
 
 
 @pytest.mark.asyncio

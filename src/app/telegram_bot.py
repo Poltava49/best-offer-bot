@@ -74,7 +74,14 @@ async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "Start parsing Wildberries...", reply_markup=stop_markup
     )
     df = await start_parsing_wb(query=query, count_products=5)
-    await update.message.reply_text(f"result:\n{df.to_string()}")
+
+    message = f"<b>Результаты для '{query}':</b>\n\n"
+    for idx, (_, row) in enumerate(df.iterrows(), start=1):
+        message += f"<b>{idx + 1}. {row['model']}</b>\n"
+        message += f"💰 Цена: {row['price']} ₽\n"
+        message += f"🔗 Ссылка: {row['url']}\n\n"
+
+    await update.message.reply_text(message, parse_mode="HTML")
 
 
 async def info(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -97,7 +104,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
 
 
 def build_bot(
-        token: str,
+    token: str,
 ) -> Application[
     ExtBot[None],
     ContextTypes.DEFAULT_TYPE,
@@ -120,13 +127,16 @@ def build_bot(
 async def run_bot(bot_token: str) -> None:
     """Launch the bot in the polling mode."""
     app = build_bot(bot_token)
+    stop_event = asyncio.Event()
     try:
         await app.initialize()
         await app.start()
         logger.info("Bot launched. Press Ctrl+C to stop.")
+        if app.updater is None:
+            logger.error("Updater is not initialized")
+            return
         await app.updater.start_polling()
-        while True:
-            await asyncio.sleep(1)
+        await stop_event.wait()
     except KeyboardInterrupt:
         logger.info("Stop signal received...")
     except Exception:
