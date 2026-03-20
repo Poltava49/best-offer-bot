@@ -49,7 +49,6 @@ def test_main_no_bot_token() -> None:
     ):
         import importlib  # noqa: PLC0415
 
-        # Перезагружаем модуль, чтобы сработала проверка BOT_TOKEN
         import src.main as main_module  # noqa: PLC0415
 
         importlib.reload(main_module)
