@@ -10,6 +10,7 @@ from urllib.parse import quote
 import pandas as pd
 from bs4 import BeautifulSoup
 from pandas import DataFrame
+from uuid import uuid4
 from selenium import webdriver
 
 logging.basicConfig(
@@ -42,14 +43,13 @@ def _parse_wb_with_selenium(query: str) -> str:
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option("useAutomationExtension", value=False)
 
-    driver = webdriver.Remote(
-        command_executor="http://selenium:4444/wd/hub", options=options
-    )
+    selenium_url = os.getenv("SELENIUM_URL", "http://selenium:4444/wd/hub")
+    driver = webdriver.Remote(command_executor=selenium_url, options=options)
     try:
         # Add URL
         url = f"https://www.wildberries.ru/catalog/0/search.aspx?search={quote(query)}"
         driver.get(url)
-        logger.info("Open search - %url")
+        logger.info("Open search - %s", url)
 
         # Wait for loading
         time.sleep(5)
@@ -60,13 +60,14 @@ def _parse_wb_with_selenium(query: str) -> str:
             time.sleep(1)
 
         # Save HTML
-        with Path("wb_page.html").open("w", encoding="utf-8") as f:
+        output_file = Path(f"wb_page_{uuid4().hex}.html")
+        with output_file.open("w", encoding="utf-8") as f:
             f.write(driver.page_source)
-        logger.info("HTML saved in wb_page.html")
+        logger.info("HTML saved in %s", output_file)
     finally:
         driver.quit()
 
-    return "wb_page.html"
+    return str(output_file)
 
 
 def get_products(filename: str, count_products: int = 10) -> DataFrame:
@@ -109,4 +110,7 @@ def get_products(filename: str, count_products: int = 10) -> DataFrame:
 async def start_parsing_wb(query: str, count_products: int = 10) -> DataFrame:
     """Async call corotine."""
     filename = await parse_wb(query=query)
-    return get_products(filename=filename, count_products=count_products)
+    try:
+        return get_products(filename=filename, count_products=count_products)
+    finally:
+        Path(filename).unlink(missing_ok=True)
