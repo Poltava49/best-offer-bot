@@ -103,7 +103,11 @@ async def test_parsing_with_query() -> None:
     mock_df: MagicMock = MagicMock()
     mock_df.iterrows.return_value = []
 
-    with patch("src.app.telegram_bot.start_parsing_wb", return_value=mock_df):
+    with patch(
+        "src.app.telegram_bot.start_parsing_wb",
+        new_callable=AsyncMock,
+        return_value=mock_df,
+    ):
         await parsing(update, context)
 
     update.message.reply_text.assert_awaited()  # type: ignore[union-attr]
