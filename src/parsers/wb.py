@@ -2,15 +2,17 @@
 
 import asyncio
 import logging
+import os
 import time
 from collections import defaultdict
 from pathlib import Path
 from urllib.parse import quote
+from uuid import uuid4
 
+import anyio
 import pandas as pd
 from bs4 import BeautifulSoup
 from pandas import DataFrame
-from uuid import uuid4
 from selenium import webdriver
 
 logging.basicConfig(
@@ -113,4 +115,4 @@ async def start_parsing_wb(query: str, count_products: int = 10) -> DataFrame:
     try:
         return get_products(filename=filename, count_products=count_products)
     finally:
-        Path(filename).unlink(missing_ok=True)
+        await anyio.Path(filename).unlink(missing_ok=True)
