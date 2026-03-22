@@ -82,7 +82,7 @@ def get_products(filename: str, count_products: int = 10) -> DataFrame:
         "a.product-card__link.j-card-link.j-open-full-product-card"
     )
     brands = soup.select("span.product-card__brand")
-    prices = soup.select("ins.price__lower-price.red-price")
+    prices = soup.select("ins.price__lower-price")
     for i, product in enumerate(product_links_title):
         if i >= count_products:
             break
