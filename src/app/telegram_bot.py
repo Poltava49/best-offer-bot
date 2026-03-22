@@ -6,6 +6,7 @@ for the Telegram bot including start, stop, parsing, info commands and
 message handling.
 """
 
+import asyncio
 import logging
 from typing import Any
 
@@ -21,6 +22,7 @@ from telegram.ext import (
 )
 
 from src.exceptions import MessageHandlerBotError
+from src.parsers.wb import start_parsing_wb
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -60,11 +62,26 @@ async def stop(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     )
 
 
-async def parsing(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start parsing."""
     if not update.message:
         raise MessageHandlerBotError
-    await update.message.reply_text("Парсинг запущен...", reply_markup=stop_markup)
+    query = context.user_data.get("last_message") if context.user_data else None
+    if not query or not isinstance(query, str):
+        await update.message.reply_text("Нет сохраненного запроса")
+        return
+    await update.message.reply_text(
+        "Start parsing Wildberries...", reply_markup=stop_markup
+    )
+    df = await start_parsing_wb(query=query, count_products=5)
+
+    message = f"<b>Результаты для '{query}':</b>\n\n"
+    for idx, (_, row) in enumerate(df.iterrows(), start=1):
+        message += f"<b>{idx + 1}. {row['model']}</b>\n"
+        message += f"💰 Цена: {row['price']} ₽\n"
+        message += f"🔗 Ссылка: {row['url']}\n\n"
+
+    await update.message.reply_text(message, parse_mode="HTML")
 
 
 async def info(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -74,10 +91,15 @@ async def info(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("Информация o боте...", reply_markup=stop_markup)
 
 
-async def handle_text(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Handle text messages."""
     if not update.message:
         raise MessageHandlerBotError
+    if context.user_data is None:
+        context.user_data = {}
+    context.user_data["last_message"] = update.message.text
+    if update.effective_chat:
+        context.user_data["chat_id"] = update.effective_chat.id
     await update.message.reply_text(f"Вы сказали: {update.message.text}")
 
 
@@ -105,9 +127,16 @@ def build_bot(
 async def run_bot(bot_token: str) -> None:
     """Launch the bot in the polling mode."""
     app = build_bot(bot_token)
+    stop_event = asyncio.Event()
     try:
+        await app.initialize()
+        await app.start()
         logger.info("Bot launched. Press Ctrl+C to stop.")
-        app.run_polling()
+        if app.updater is None:
+            logger.error("Updater is not initialized")
+            return
+        await app.updater.start_polling()
+        await stop_event.wait()
     except KeyboardInterrupt:
         logger.info("Stop signal received...")
     except Exception:

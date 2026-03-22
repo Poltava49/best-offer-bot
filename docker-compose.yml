@@ -7,12 +7,31 @@ services:
     ports:
       - "5051:8080"
     depends_on:
-      - postgres
+      postgres:
+        condition: service_started
+      selenium:
+        condition: service_healthy
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
+    shm_size: 2gb
+
+  selenium:
+    image: selenium/standalone-chromium:latest 
+    container_name: selenium-container
+    restart: unless-stopped
+    shm_size: 2g
+    ports:
+      - "4444:4444"  # Selenium WebDriver API
+      - "7900:7900"  # VNC Viewer
+    environment:
+      - SE_NODE_MAX_SESSIONS=1
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - SE_NODE_SESSION_TIMEOUT=300
+      - SE_NODE_GRID_URL=http://localhost:4444
+      - SE_NODE_DETECT_DRIVERS=false
 
   postgres:
     image: postgres:14
@@ -20,12 +39,12 @@ services:
     restart: always
     env_file: .env
     ports:
-      - "5430:5430"
+      - "5432:5432"
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: qwerty
       POSTGRES_DB: parser_bot_db
-    volumes: #том в докере для маппинга
+    volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./src/db/schema.sql:/docker-entrypoint-initdb.d/init.sql
 

@@ -1,17 +1,15 @@
-FROM python:3.13-slim
+FROM python:3.12-slim-bookworm
+
+COPY --from=docker.io/astral/uv:0.10 /uv /uvx /bin/
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y \
-    libpq-dev \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+COPY pyproject.toml uv.lock ./
 
+RUN uv sync --frozen
 
 COPY . .
+RUN useradd -m appuser && chown -R appuser:appuser /app
+USER appuser
 
-
-RUN pip install --no-cache-dir uv \
-    && uv pip install --system --no-cache .
-
-CMD ["python", "-m", "src.main"]
+CMD ["uv", "run", "-m", "src.main"]
