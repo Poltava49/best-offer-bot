@@ -32,6 +32,12 @@ services:
       - SE_NODE_SESSION_TIMEOUT=300
       - SE_NODE_GRID_URL=http://localhost:4444
       - SE_NODE_DETECT_DRIVERS=false
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+      start_period: 10s
 
   postgres:
     image: postgres:14
