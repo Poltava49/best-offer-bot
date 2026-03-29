@@ -10,6 +10,7 @@ import asyncio
 import logging
 from typing import Any
 
+from src.parsers.wb import start_parsing_wb
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     Application,
@@ -22,7 +23,6 @@ from telegram.ext import (
 )
 
 from src.exceptions import MessageHandlerBotError
-from src.parsers.wb import start_parsing_wb
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO

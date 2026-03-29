@@ -4,8 +4,6 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from telegram import Message, Update
-
 from src.app.telegram_bot import (
     build_bot,
     handle_text,
@@ -14,6 +12,8 @@ from src.app.telegram_bot import (
     start,
     stop,
 )
+from telegram import Message, Update
+
 from src.exceptions import MessageHandlerBotError
 
 

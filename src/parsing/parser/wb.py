@@ -15,10 +15,15 @@ from bs4 import BeautifulSoup
 from pandas import DataFrame
 from selenium import webdriver
 
+from src.parsing import Parser
+
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+
+class WbParser(Parser): ...
 
 
 async def parse_wb(query: str) -> str:
@@ -81,6 +86,9 @@ def get_products(filename: str, count_products: int = 10) -> DataFrame:
     product_links_title = soup.select(
         "a.product-card__link.j-card-link.j-open-full-product-card"
     )
+    print("############3")
+    print(product_links_title[0])
+    exit(0)
     brands = soup.select("span.product-card__brand")
     prices = soup.select("ins.price__lower-price")
     for i, product in enumerate(product_links_title):

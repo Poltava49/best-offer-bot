@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-
 from src.parsers.wb import get_products, parse_wb, start_parsing_wb
 
 

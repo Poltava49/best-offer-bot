@@ -11,7 +11,7 @@ import os
 import sys
 from typing import cast
 
-from src.app.telegram_bot import run_bot
+from src.bot.telegram_bot import run_bot
 from src.db.database import connect_to_db
 from src.exceptions import DatabaseConnectionError
 
