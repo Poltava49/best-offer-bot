@@ -1,8 +1,16 @@
+"""
+Schema of dataclasses.
+
+This module describes and fixes scheme of data which use in parsing web pages
+"""
+
 from dataclasses import dataclass
 from enum import Enum
 
 
 class MarketPlace(Enum):
+    """Create constants tied to uniq values."""
+
     OZON = "Ozon"
     WB = "Wildberries"
     YANDEX = "YandexMarket"
@@ -10,6 +18,8 @@ class MarketPlace(Enum):
 
 @dataclass(frozen=True, slots=True)
 class Product:
+    """Create constants tied to product attributes."""
+
     title: str
     price: int
     raiting: float

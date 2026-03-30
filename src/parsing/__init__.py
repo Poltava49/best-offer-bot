@@ -5,14 +5,16 @@ This package contains parsers for various marketplaces
 including Wildberries, Ozon, and other platforms.
 """
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
 from src.app import models
 
 
 @dataclass(frozen=True, slots=True)
-class ParsingАttributes:
+class ParsingAttributes:
+    """Create constants tied to parser attributes."""
+
     title_class: str
     price_class: str
     raiting_class: str
@@ -22,7 +24,13 @@ class ParsingАttributes:
 
 
 class Parser(ABC):
-    def __init__(self, attributes: ParsingАttributes):
+    """Create parser abstract classes."""
+
+    @abstractmethod
+    def __init__(self, attributes: ParsingAttributes) -> None:
+        """Initialize parser with parsing attributes."""
         self.attributes = attributes
 
-    def get_products(self, query: str, count: int) -> list[models.Product]: ...
+    @abstractmethod
+    def get_products(self, query: str, count: int) -> list[models.Product]:
+        """Get product of parsing and take to bot."""
