@@ -17,8 +17,8 @@ class ParsingAttributes:
 
     title_class: str
     price_class: str
-    raiting_class: str
-    raiting_count_class: str
+    rating_class: str
+    rating_count_class: str
     product_card_selector: str
     market: models.MarketPlace
 
@@ -29,7 +29,6 @@ class Parser(ABC):
     @abstractmethod
     def __init__(self, attributes: ParsingAttributes) -> None:
         """Initialize parser with parsing attributes."""
-        self.attributes = attributes
 
     @abstractmethod
     def get_products(self, query: str, count: int) -> list[models.Product]:

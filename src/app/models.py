@@ -22,7 +22,7 @@ class Product:
 
     title: str
     price: int
-    raiting: float
-    raiting_count: int
+    rating: float
+    rating_count: int
     link: str
     market: MarketPlace

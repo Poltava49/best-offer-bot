@@ -4,7 +4,9 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from src.app.telegram_bot import (
+from telegram import Message, Update
+
+from src.bot.telegram_bot import (
     build_bot,
     handle_text,
     info,
@@ -12,8 +14,6 @@ from src.app.telegram_bot import (
     start,
     stop,
 )
-from telegram import Message, Update
-
 from src.exceptions import MessageHandlerBotError
 
 
@@ -104,7 +104,7 @@ async def test_parsing_with_query() -> None:
     mock_df.iterrows.return_value = []
 
     with patch(
-        "src.app.telegram_bot.start_parsing_wb",
+        "src.bot.telegram_bot.start_parsing_wb",
         new_callable=AsyncMock,
         return_value=mock_df,
     ):
