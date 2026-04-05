@@ -6,12 +6,12 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from src.parsers.wb import get_products, parse_wb, start_parsing_wb
+from src.parsing.parser.wb import get_products, parse_wb, start_parsing_wb
 
 
 def test_get_products() -> None:
     """Test parsing HTML file to DataFrame."""
-    result = get_products(filename="src/parsers/wb_page.html")
+    result = get_products(filename="tests/test_html/wb_page.html")
 
     assert isinstance(result, pd.DataFrame)
     assert "model" in result.columns
@@ -33,7 +33,7 @@ def test_get_products_empty_file(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_parse_wb() -> None:
     """Test async parse_wb function."""
-    with patch("src.parsers.wb._parse_wb_with_selenium") as mock_parse:
+    with patch("src.parsing.parser.wb._parse_wb_with_selenium") as mock_parse:
         mock_parse.return_value = "wb_page.html"
 
         result = await parse_wb("iphone")
@@ -50,8 +50,8 @@ async def test_start_parsing_wb() -> None:
     )
 
     with (
-        patch("src.parsers.wb.parse_wb", return_value="wb_page.html"),
-        patch("src.parsers.wb.get_products", return_value=mock_df),
+        patch("src.parsing.parser.wb.parse_wb", return_value="wb_page.html"),
+        patch("src.parsing.parser.wb.get_products", return_value=mock_df),
     ):
         result = await start_parsing_wb("iphone", count_products=5)
 

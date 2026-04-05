@@ -1,6 +1,5 @@
 """
-Telegram bot application package.
+Analyzer application package.
 
-This package contains the Telegram bot implementation including
-command handlers and bot initialization logic.
+This package contains the Analyzer methods and  initialization logic.
 """

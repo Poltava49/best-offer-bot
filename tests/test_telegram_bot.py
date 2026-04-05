@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from telegram import Message, Update
 
-from src.app.telegram_bot import (
+from src.bot.telegram_bot import (
     build_bot,
     handle_text,
     info,
@@ -104,7 +104,7 @@ async def test_parsing_with_query() -> None:
     mock_df.iterrows.return_value = []
 
     with patch(
-        "src.app.telegram_bot.start_parsing_wb",
+        "src.bot.telegram_bot.start_parsing_wb",
         new_callable=AsyncMock,
         return_value=mock_df,
     ):

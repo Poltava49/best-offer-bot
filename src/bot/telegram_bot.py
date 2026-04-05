@@ -22,7 +22,7 @@ from telegram.ext import (
 )
 
 from src.exceptions import MessageHandlerBotError
-from src.parsers.wb import start_parsing_wb
+from src.parsing.parser.wb import start_parsing_wb
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
