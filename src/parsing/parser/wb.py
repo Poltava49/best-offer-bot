@@ -15,7 +15,8 @@ from bs4 import BeautifulSoup
 from pandas import DataFrame
 from selenium import webdriver
 
-from src.parsing import Parser
+from src.app import models
+from src.parsing import Parser, ParsingAttributes
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -25,6 +26,14 @@ logger = logging.getLogger(__name__)
 
 class WbParser(Parser):
     """Create parser the Wildberries marketplace."""
+
+    def __init__(self, attributes: ParsingAttributes) -> None:
+        """Initialize WbParser with parsing attributes."""
+        self.attributes = attributes
+
+    def get_products(self, query: str, count: int) -> list[models.Product]:
+        """Get products by parsing Wildberries search results."""
+        raise NotImplementedError
 
 
 async def parse_wb(query: str) -> str:
