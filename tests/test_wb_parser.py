@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pandas as pd
 import pytest
 
-from src.parsing.parser.wb import get_products, parse_wb, start_parsing_wb
+from src.app import  parse, start_parsing_wb
 
 
 def test_get_products() -> None:
@@ -31,19 +31,19 @@ def test_get_products_empty_file(tmp_path: Path) -> None:
 
 
 @pytest.mark.asyncio
-async def test_parse_wb() -> None:
+async def test_parse() -> None:
     """Test async parse_wb function."""
     with patch("src.parsing.parser.wb._parse_wb_with_selenium") as mock_parse:
         mock_parse.return_value = "wb_page.html"
 
-        result = await parse_wb("iphone")
+        result = await parse("iphone")
 
         assert result == "wb_page.html"
         mock_parse.assert_called_once_with("iphone")
 
 
 @pytest.mark.asyncio
-async def test_start_parsing_wb() -> None:
+async def test_start_parsing() -> None:
     """Test start_parsing_wb function."""
     mock_df = pd.DataFrame(
         {"model": ["Test"], "price": ["100"], "url": ["http://test"]}
