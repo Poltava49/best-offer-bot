@@ -15,7 +15,7 @@ from uuid import uuid4
 import anyio
 from selenium import webdriver
 
-from src.parsing import Parser
+from src.parsing.parser import Parser
 from src.parsing.parser.wb import WbParser, wb_attr
 
 logging.basicConfig(
@@ -28,23 +28,32 @@ wb_parser = WbParser(attributes=wb_attr)
 
 def get_parser(marketplace: str) -> Parser:
     """Return parser instance for the specified marketplace."""
-    if marketplace == "WB":
+    if marketplace == "wildberries":
         return WbParser(attributes=wb_attr)
     msg = f"Unknown marketplace: {marketplace}"
     raise ValueError(msg)
 
 
-async def parse(query: str) -> str:
+async def parse(query: str, marketplace: str) -> str:
     """Async wrapper for Selenium."""
     loop = asyncio.get_event_loop()
+    url = ""
+    if marketplace == "wildberries":
+        url = f"https://www.wildberries.ru/catalog/0/search.aspx?search={query}"
+    elif marketplace == "ozon":
+        url = f"https://www.ozon.ru/search/?text={query}"
+    elif marketplace == "yandex.market":
+        url = f"https://market.yandex.ru/search?text={query}"
+    else:
+        raise ValueError(f"Unsupported marketplace: {marketplace}")
     return await loop.run_in_executor(
         None,  # use ThreadPoolExecutor defolt
         _parse_with_selenium,  # sync func
-        query,
+        url
     )
 
 
-def _parse_with_selenium(query: str, link: str) -> str:
+def _parse_with_selenium(url: str) -> str:
     """Parse HTML page Wildberries by Selenium."""
     options = webdriver.ChromeOptions()
     options.add_argument("--disable-blink-features=AutomationControlled")
@@ -62,9 +71,8 @@ def _parse_with_selenium(query: str, link: str) -> str:
     driver = webdriver.Remote(command_executor=selenium_url, options=options)
     try:
         # Add URL
-        url = f"{link}{quote(query)}"
         driver.get(url)
-        logger.info("Open search - %s", url)
+        logger.info("Open search - %s", link)
 
         # Wait for loading
         time.sleep(5)
@@ -85,11 +93,24 @@ def _parse_with_selenium(query: str, link: str) -> str:
     return str(output_file)
 
 
-async def start_parsing(query: str, marketplace: str, count_products: int = 10) -> dict:
+async def start_parsing(query: str, marketplaces: list, count_products: int = 10) -> dict:
     """Async call corotine."""
-    filename = await parse(query=query)
-    parser = get_parser(marketplace)
+    finall_results = list()
+    filenames = list()
     try:
-        return parser.get_products(filename=filename, count_products=count_products)
+        for marketplace in marketplaces:
+            try:
+                filename = await parse(query=query, marketplace=marketplace)
+                filenames.append(filename)
+                parser = get_parser(marketplace)
+                finall_results.append(parser.get_products(filename=filename, count_products=count_products))
+            except Exception as e:
+                logger.error(f"Error parsing {marketplace}: {e}")
+                final_results[marketplace] = {"error": str(e), "products": []}
     finally:
-        await anyio.Path(filename).unlink(missing_ok=True)
+        for filename in filenames:
+            try:
+                await anyio.Path(filename).unlink(missing_ok=True)
+            except Exception as e:
+                logger.warning(f"Failed to delete {filename}: {e}")
+    return final_results
