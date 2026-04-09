@@ -30,9 +30,13 @@ class WbParser(Parser):
     def __init__(self, attributes: ParsingAttributes) -> None:
         """Initialize class with base schema for parsing."""
         self.attrs = attributes
+        self.me = models.WB
+        self.get_url = lambda query: f"https://www.wildberries.ru/catalog/0/search.aspx?search={query}"
 
-    def get_products(self, filename: str, count_products: int) -> dict:
+    def get_products(self, query: str, count: int) -> dict:
         """Load data from parsed file and convert to DataFrame."""
+        filename = self._get_page_with_selenium(config.MARKETPLACES_URL_TEMPLATES[self.me](query))
+
         products_dict = defaultdict(list)
         with Path(filename).open(encoding="utf-8") as file:
             html_content = file.read()
@@ -66,3 +70,5 @@ class WbParser(Parser):
             products_dict["rating_count_class"].append(rating_count_class)
             products_dict["price"].append(price)
         return products_dict
+
+

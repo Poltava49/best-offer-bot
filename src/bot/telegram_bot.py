@@ -10,6 +10,7 @@ import asyncio
 import logging
 from typing import Any
 
+from src import app
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     Application,
@@ -31,7 +32,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 start_keyboard = [["/parsing", "/info"]]
-marketplace_keyboard = [["wildberries","ozon", "yandex.market"]]
+marketplace_keyboard = [[app.models.MarketPlace.OZON, app.models.MarketPlace.WB, app.models.MarketPlace.YANDEX ]]
 stop_keyboard = [["/stop"]]
 start_markup = ReplyKeyboardMarkup(
     keyboard=start_keyboard, resize_keyboard=True, one_time_keyboard=False
@@ -71,12 +72,15 @@ async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start parsing."""
     if not update.message:
         raise MessageHandlerBotError
-    query = context.user_data.get("last_message") if context.user_data else None
+    if not context.user_data:
+        raise ...
+
+    query = context.user_data.get("last_message")
     if not query or not isinstance(query, str):
         await update.message.reply_text("Нет сохраненного запроса")
         return
     
-    marketplaces = context.user_data.get("choosen_markets") if context.user_data else None
+    marketplaces = context.user_data.get("choosen_markets")
     if not marketplaces or not isinstance(marketplaces, list):
         await update.message.reply_text("Нет выбранных маркетплейсов")
         return
@@ -84,7 +88,7 @@ async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text(
         "Start parsing...", reply_markup=stop_markup
     )
-    df = await start_parsing(query=query, count_products=5, marketplaces=marketplaces)
+    df = app.find_best_offer(query=query, count_products=5, marketplaces=marketplaces)
     data = pd.DataFrame(df)
 
     message = f"<b>Результаты для '{query}':</b>\n\n"
