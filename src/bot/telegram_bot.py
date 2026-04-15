@@ -10,6 +10,7 @@ import asyncio
 import logging
 from typing import Any
 
+import pandas as pd
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     Application,
@@ -20,10 +21,10 @@ from telegram.ext import (
     MessageHandler,
     filters,
 )
-import pandas as pd
 
+from src.app import find_best_offer
+from src.app.models import MarketPlace
 from src.exceptions import MessageHandlerBotError
-from src.app import start_parsing
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -31,7 +32,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 start_keyboard = [["/parsing", "/info"]]
-marketplace_keyboard = [["wildberries","ozon", "yandex.market"]]
+marketplace_keyboard = [
+    [MarketPlace.WB.value, MarketPlace.OZON.value, MarketPlace.YANDEX.value]
+]
 stop_keyboard = [["/stop"]]
 start_markup = ReplyKeyboardMarkup(
     keyboard=start_keyboard, resize_keyboard=True, one_time_keyboard=False
@@ -71,20 +74,21 @@ async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start parsing."""
     if not update.message:
         raise MessageHandlerBotError
-    query = context.user_data.get("last_message") if context.user_data else None
+    if not context.user_data:
+        msg = "Dont make any actions. Context user is empty."
+        raise ValueError(msg)
+    query = context.user_data.get("last_message")
     if not query or not isinstance(query, str):
         await update.message.reply_text("Нет сохраненного запроса")
         return
-    
-    marketplaces = context.user_data.get("choosen_markets") if context.user_data else None
+
+    marketplaces = context.user_data.get("choosen_markets")
     if not marketplaces or not isinstance(marketplaces, list):
         await update.message.reply_text("Нет выбранных маркетплейсов")
         return
 
-    await update.message.reply_text(
-        "Start parsing...", reply_markup=stop_markup
-    )
-    df = await start_parsing(query=query, count_products=5, marketplaces=marketplaces)
+    await update.message.reply_text("Start parsing...", reply_markup=stop_markup)
+    df = await find_best_offer(query=query, marketplaces=marketplaces, count_products=5)
     data = pd.DataFrame(df)
 
     message = f"<b>Результаты для '{query}':</b>\n\n"
@@ -95,9 +99,8 @@ async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         message += f"🧮 Количество оценок: {row['rating_count_class']}\n\n"
         message += f"💰 Цена: {row['price']} ₽\n"
 
-
     await update.message.reply_text(message, parse_mode="HTML")
-    context.user_data["choosen_markets"] = list()
+    context.user_data["choosen_markets"] = []
 
 
 async def info(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -116,10 +119,13 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
     context.user_data["last_message"] = update.message.text
     if update.effective_chat:
         context.user_data["chat_id"] = update.effective_chat.id
-    await update.message.reply_text(f"Ищем: {update.message.text} на каких маркептлейсах?", reply_markup=marketplace_markup)
+    await update.message.reply_text(
+        f"Ищем: {update.message.text} на каких маркептлейсах?",
+        reply_markup=marketplace_markup,
+    )
     text = update.message.text
     if "choosen_markets" not in context.user_data:
-        context.user_data["choosen_markets"] = list()
+        context.user_data["choosen_markets"] = []
         context.user_data["choosen_markets"].append(text)
 
 
