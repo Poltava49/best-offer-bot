@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 
 from src.app.models import MarketPlace
 from src.parsing import Parser, ParsingAttributes
-from src.parsing.parser.config import MARKETPLACES_URL_TEMPLATES
+from src.parsing.parser.constants import MARKETPLACES_URL_TEMPLATES
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -68,4 +68,5 @@ class WbParser(Parser):
             products_dict["rating_class"].append(rating_class)
             products_dict["rating_count_class"].append(rating_count_class)
             products_dict["price"].append(price)
+            logger.info("Total products collected: %s", len(products_dict['title']))
         return products_dict

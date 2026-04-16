@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 start_keyboard = [["/parsing", "/info"]]
 marketplace_keyboard = [
-    [MarketPlace.WB.value, MarketPlace.OZON.value, MarketPlace.YANDEX.value]
+    [MarketPlace.WB.value, MarketPlace.OZON.value, MarketPlace.YANDEX.value, "/parsing"]
 ]
 stop_keyboard = [["/stop"]]
 start_markup = ReplyKeyboardMarkup(
@@ -116,17 +116,19 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         raise MessageHandlerBotError
     if context.user_data is None:
         context.user_data = {}
-    context.user_data["last_message"] = update.message.text
+    if "last_message" not in context.user_data:
+        context.user_data["last_message"] = update.message.text
     if update.effective_chat:
         context.user_data["chat_id"] = update.effective_chat.id
     await update.message.reply_text(
-        f"Ищем: {update.message.text} на каких маркептлейсах?",
+        f"Ищем: {context.user_data.get('last_message')} на каких маркептлейсах?",
         reply_markup=marketplace_markup,
     )
+    logger.info("Marketplace choosen - %context.user_data['choosen_markets']")
     text = update.message.text
     if "choosen_markets" not in context.user_data:
         context.user_data["choosen_markets"] = []
-        context.user_data["choosen_markets"].append(text)
+    context.user_data["choosen_markets"].append(text)
 
 
 def build_bot(

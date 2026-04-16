@@ -4,14 +4,6 @@ from src.app.models import MarketPlace
 from src.parsing import ParsingAttributes
 from src.parsing.parser.wb import WbParser
 
-MARKETPLACES_URL_TEMPLATES = {
-    MarketPlace.WB: lambda query: (
-        f"https://www.wildberries.ru/catalog/0/search.aspx?search={query}"
-    ),
-    MarketPlace.OZON: lambda query: f"https://www.ozon.ru/search/?text={query}",
-    MarketPlace.YANDEX: lambda query: f"https://market.yandex.ru/search?text={query}",
-}
-
 wb_attr = ParsingAttributes(
     title_class="product-card__name-separator",
     price_class="ins.price__lower-price",
@@ -21,5 +13,4 @@ wb_attr = ParsingAttributes(
     market=MarketPlace.WB,
 )
 
-
-MARKETPLACES_PARSERS = {MarketPlace.WB: WbParser(wb_attr)}
+MARKETPLACES_PARSERS = {MarketPlace.WB.value: WbParser(wb_attr)}

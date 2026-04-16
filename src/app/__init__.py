@@ -35,7 +35,9 @@ async def find_best_offer(
     for marketplace in marketplaces:
         try:
             parser = get_parser(marketplace)
-            finall_results.append(parser.get_products(query, count=count_products))
+            finall_results.append(
+                parser.get_products(query, count_products=count_products)
+            )
         except Exception:
             logger.exception("Error parsing %s", marketplace)
     return finall_results
