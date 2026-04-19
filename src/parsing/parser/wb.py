@@ -1,12 +1,12 @@
 """Custom wildberries parser with selenium."""
 
 import logging
+import re
 from pathlib import Path
-from typing import Any
 
 from bs4 import BeautifulSoup
 
-from src.app.models import MarketPlace
+from src.app.models import MarketPlace, Product
 from src.parsing import Parser, ParsingAttributes
 from src.parsing.parser.constants import MARKETPLACES_URL_TEMPLATES
 
@@ -24,24 +24,28 @@ class WbParser(Parser):
         self.attrs = attributes
         self.me = MarketPlace.WB
 
-    def get_products(self, query: str, count_products: int) -> dict[str, list[Any]]:
+    def get_products(self, query: str, count: int) -> list[Product]:
         """Load data from parsed file and convert to DataFrame."""
         filename = self._get_page_with_selenium(
             MARKETPLACES_URL_TEMPLATES[self.me](query)
         )
-        products_dict: dict[str, list[Any]] = {
-            "title": [],
-            "url": [],
-            "rating_class": [],
-            "rating_count_class": [],
-            "price": [],
-        }
+        products: list[Product] = []
+
+        def _to_int(value: str) -> int:
+            digits = re.sub(r"\D", "", value)
+            return int(digits) if digits else 0
+
+        def _to_float(value: str) -> float:
+            normalized = value.replace(",", ".").strip()
+            match = re.search(r"\d+(?:\.\d+)?", normalized)
+            return float(match.group(0)) if match else 0.0
+
         with Path(filename).open(encoding="utf-8") as file:
             html_content = file.read()
         soup = BeautifulSoup(html_content, "html.parser")
         product_links_title = soup.select(self.attrs.product_card_selector)
         for i, product in enumerate(product_links_title):
-            if i >= count_products:
+            if i >= count:
                 break
             title_elem = product.select_one(self.attrs.title_class)
             title = title_elem.text.strip() if title_elem else ""
@@ -55,18 +59,20 @@ class WbParser(Parser):
             )
 
             url = product.get("href", "")
+            if not url:
+                continue
+
             price_element = product.select_one(self.attrs.price_class)
-            if price_element:
-                price = (
-                    price_element.text.strip()
-                    .replace("\xa0", " ")
-                    .replace("₽", "")
-                    .replace(" ", "")
-                )
-            products_dict["title"].append(title)
-            products_dict["url"].append(url)
-            products_dict["rating_class"].append(rating_class)
-            products_dict["rating_count_class"].append(rating_count_class)
-            products_dict["price"].append(price)
-            logger.info("Total products collected: %s", len(products_dict['title']))
-        return products_dict
+            price_text = price_element.text.strip() if price_element else ""
+
+            product_item = Product(
+                title=title,
+                price=_to_int(price_text),
+                rating=_to_float(rating_class),
+                rating_count=_to_int(rating_count_class),
+                link=url,
+                market=self.attrs.market,
+            )
+            products.append(product_item)
+            logger.info("Total products collected: %s", len(products))
+        return products

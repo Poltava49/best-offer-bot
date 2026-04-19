@@ -10,7 +10,6 @@ import asyncio
 import logging
 from typing import Any
 
-import pandas as pd
 from telegram import ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
 from telegram.ext import (
     Application,
@@ -88,16 +87,17 @@ async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     await update.message.reply_text("Start parsing...", reply_markup=stop_markup)
-    df = await find_best_offer(query=query, marketplaces=marketplaces, count_products=5)
-    data = pd.DataFrame(df)
+    products = await find_best_offer(
+        query=query, marketplaces=marketplaces, count_products=5
+    )
 
     message = f"<b>Результаты для '{query}':</b>\n\n"
-    for idx, (_, row) in enumerate(data.iterrows(), start=1):
-        message += f"<b>{idx + 1}. {row['title']}</b>\n"
-        message += f"🔗 Ссылка: {row['url']}\n\n"
-        message += f"💫 Рейтинг: {row['rating_class']}\n\n"
-        message += f"🧮 Количество оценок: {row['rating_count_class']}\n\n"
-        message += f"💰 Цена: {row['price']} ₽\n"
+    for idx, product in enumerate(products, start=1):
+        message += f"<b>{idx}. {product.title}</b>\n"
+        message += f"🔗 Ссылка: {product.link}\n\n"
+        message += f"💫 Рейтинг: {product.rating}\n\n"
+        message += f"🧮 Количество оценок: {product.rating_count}\n\n"
+        message += f"💰 Цена: {product.price} ₽\n"
 
     await update.message.reply_text(message, parse_mode="HTML")
     context.user_data["choosen_markets"] = []
@@ -124,11 +124,15 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         f"Ищем: {context.user_data.get('last_message')} на каких маркептлейсах?",
         reply_markup=marketplace_markup,
     )
-    logger.info("Marketplace choosen - %context.user_data['choosen_markets']")
-    text = update.message.text
     if "choosen_markets" not in context.user_data:
         context.user_data["choosen_markets"] = []
-    context.user_data["choosen_markets"].append(text)
+    text = update.message.text
+    try:
+        market = MarketPlace(text)
+    except ValueError:
+        return
+    context.user_data["choosen_markets"].append(market)
+    logger.info("Marketplace chosen - %s", market)
 
 
 def build_bot(
