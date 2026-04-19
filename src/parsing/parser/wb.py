@@ -1,8 +1,8 @@
 """Custom wildberries parser with selenium."""
 
 import logging
-import re
 from pathlib import Path
+from typing import Any
 
 from bs4 import BeautifulSoup
 
@@ -14,6 +14,14 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+
+def _normalize_href(value: Any) -> str | None:
+    if not value:
+        return None
+    if isinstance(value, list):
+        return str(value[0]) if value else None
+    return str(value)
 
 
 class WbParser(Parser):
@@ -30,15 +38,6 @@ class WbParser(Parser):
             MARKETPLACES_URL_TEMPLATES[self.me](query)
         )
         products: list[Product] = []
-
-        def _to_int(value: str) -> int:
-            digits = re.sub(r"\D", "", value)
-            return int(digits) if digits else 0
-
-        def _to_float(value: str) -> float:
-            normalized = value.replace(",", ".").strip()
-            match = re.search(r"\d+(?:\.\d+)?", normalized)
-            return float(match.group(0)) if match else 0.0
 
         with Path(filename).open(encoding="utf-8") as file:
             html_content = file.read()
@@ -58,19 +57,20 @@ class WbParser(Parser):
                 rating_count_class_elem.text.strip() if rating_count_class_elem else ""
             )
 
-            raw_url = product.get("href")
-            if not raw_url:
+            url = _normalize_href(product.get("href"))
+            if not url:
                 continue
-            url = raw_url[0] if isinstance(raw_url, list) else str(raw_url)
 
             price_element = product.select_one(self.attrs.price_class)
             price_text = price_element.text.strip() if price_element else ""
 
             product_item = Product(
                 title=title,
-                price=_to_int(price_text),
-                rating=_to_float(rating_class),
-                rating_count=_to_int(rating_count_class),
+                price=int("".join(ch for ch in price_text if ch.isdigit()) or 0),
+                rating=float(rating_class.replace(",", ".") or 0.0),
+                rating_count=int(
+                    "".join(ch for ch in rating_count_class if ch.isdigit()) or 0
+                ),
                 link=url,
                 market=self.attrs.market,
             )
