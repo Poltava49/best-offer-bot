@@ -58,9 +58,10 @@ class WbParser(Parser):
                 rating_count_class_elem.text.strip() if rating_count_class_elem else ""
             )
 
-            url = product.get("href", "")
-            if not url:
+            raw_url = product.get("href")
+            if not raw_url:
                 continue
+            url = raw_url[0] if isinstance(raw_url, list) else str(raw_url)
 
             price_element = product.select_one(self.attrs.price_class)
             price_text = price_element.text.strip() if price_element else ""

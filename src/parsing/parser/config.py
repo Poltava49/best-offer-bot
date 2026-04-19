@@ -13,6 +13,4 @@ wb_attr = ParsingAttributes(
     market=MarketPlace.WB,
 )
 
-MARKETPLACES_PARSERS: dict[MarketPlace, Parser] = {
-    MarketPlace.WB: WbParser(wb_attr)
-}
+MARKETPLACES_PARSERS: dict[MarketPlace, Parser] = {MarketPlace.WB: WbParser(wb_attr)}
