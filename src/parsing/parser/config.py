@@ -1,7 +1,7 @@
 """Declare marketplaces URL in global variable."""
 
 from src.app.models import MarketPlace
-from src.parsing import ParsingAttributes
+from src.parsing import Parser, ParsingAttributes
 from src.parsing.parser.wb import WbParser
 
 wb_attr = ParsingAttributes(
@@ -13,4 +13,6 @@ wb_attr = ParsingAttributes(
     market=MarketPlace.WB,
 )
 
-MARKETPLACES_PARSERS = {MarketPlace.WB.value: WbParser(wb_attr)}
+MARKETPLACES_PARSERS: dict[MarketPlace, Parser] = {
+    MarketPlace.WB: WbParser(wb_attr)
+}

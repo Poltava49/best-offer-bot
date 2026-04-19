@@ -11,7 +11,6 @@ import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 from uuid import uuid4
 
 from selenium import webdriver
@@ -44,7 +43,7 @@ class Parser(ABC):
         """Initialize parser with parsing attributes."""
 
     @abstractmethod
-    def get_products(self, query: str, count: int) -> dict[str, list[Any]]:
+    def get_products(self, query: str, count: int) -> list[models.Product]:
         """Get product of parsing and take to bot."""
 
     def _get_page_with_selenium(self, url: str) -> str:
@@ -64,19 +63,12 @@ class Parser(ABC):
         selenium_url = os.getenv("SELENIUM_URL", "http://selenium:4444/wd/hub")
         driver = webdriver.Remote(command_executor=selenium_url, options=options)
         try:
-            # Add URL
             driver.get(url)
             logger.info("Open search - %s", url)
-
-            # Wait for loading
             time.sleep(5)
-
-            # Rolling page to load products
             for _ in range(3):
                 driver.execute_script("window.scrollBy(0, 500);")
                 time.sleep(1)
-
-            # Save HTML
             output_file = Path(f"page_{uuid4().hex}.html")
             with output_file.open("w", encoding="utf-8") as f:
                 f.write(driver.page_source)
