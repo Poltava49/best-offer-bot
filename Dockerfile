@@ -1,16 +1,17 @@
 FROM python:3.12-slim-bookworm
 
-COPY --from=docker.io/astral/uv:0.10 /uv /uvx /bin/
+COPY --from=docker.io/astral/uv:0.11 /uv /uvx /bin/
 
 WORKDIR /app
 
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml uv.lock requirements.txt ./
 
-RUN uv sync --frozen
+RUN uv pip install --system -r requirements.txt
 
-COPY src .
+COPY . .
 
 RUN useradd -m appuser && chown -R appuser:appuser /app
+
 USER appuser
 
-CMD ["uv", "run", "fastapi", "dev"]
+CMD ["python", "-m", "src.main"]
