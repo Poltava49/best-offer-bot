@@ -8,6 +8,10 @@ COPY pyproject.toml uv.lock requirements.txt ./
 
 RUN uv pip install --system -r requirements.txt
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends chromium chromium-driver \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY . .
 
 RUN useradd -m appuser && chown -R appuser:appuser /app

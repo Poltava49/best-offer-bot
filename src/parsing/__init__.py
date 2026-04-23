@@ -62,6 +62,7 @@ class Parser(ABC):
 
         selenium_url = os.getenv("SELENIUM_URL", "http://selenium:4444/wd/hub")
         driver = webdriver.Remote(command_executor=selenium_url, options=options)
+        output_file = Path(f"page_{uuid4().hex}.html")
         try:
             driver.get(url)
             logger.info("Open search - %s", url)
@@ -69,7 +70,6 @@ class Parser(ABC):
             for _ in range(3):
                 driver.execute_script("window.scrollBy(0, 500);")
                 time.sleep(1)
-            output_file = Path(f"page_{uuid4().hex}.html")
             with output_file.open("w", encoding="utf-8") as f:
                 f.write(driver.page_source)
             logger.info("HTML saved in %s", output_file)

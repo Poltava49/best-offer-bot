@@ -74,8 +74,8 @@ async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message:
         raise MessageHandlerBotError
     if not context.user_data:
-        msg = "Dont make any actions. Context user is empty."
-        raise ValueError(msg)
+        await update.message.reply_text("Dont make any actions. Context user is empty.")
+        return
     query = context.user_data.get("last_message")
     if not query or not isinstance(query, str):
         await update.message.reply_text("Нет сохраненного запроса")
