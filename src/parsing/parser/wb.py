@@ -2,7 +2,6 @@
 
 import logging
 from pathlib import Path
-from typing import Any
 
 from bs4 import BeautifulSoup
 
@@ -16,7 +15,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _normalize_href(value: Any) -> str | None:
+def _normalize_href(value: str | None) -> str | None:
     if not value:
         return None
     if isinstance(value, list):
@@ -57,7 +56,8 @@ class WbParser(Parser):
                 rating_count_class_elem.text.strip() if rating_count_class_elem else ""
             )
 
-            url = _normalize_href(product.get("href"))
+            href_value = product.get("href")
+            url = _normalize_href(str(href_value) if href_value is not None else None)
             if not url:
                 continue
 
