@@ -32,7 +32,7 @@ class WbParser(Parser):
         self.me = MarketPlace.WB
 
     def get_products(self, query: str, count: int) -> list[Product]:
-        """Load data from parsed file and convert to DataFrame."""
+        """Load data from parsed file and convert to list."""
         filename = self._get_page_with_selenium(
             MARKETPLACES_URL_TEMPLATES[self.me](query)
         )
