@@ -21,8 +21,9 @@ from telegram.ext import (
     filters,
 )
 
+from src.app import find_best_offer
+from src.app.models import MarketPlace
 from src.exceptions import MessageHandlerBotError
-from src.parsing.parser.wb import start_parsing_wb
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -30,9 +31,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 start_keyboard = [["/parsing", "/info"]]
+marketplace_keyboard = [
+    [MarketPlace.WB.value, MarketPlace.OZON.value, MarketPlace.YANDEX.value, "/parsing"]
+]
 stop_keyboard = [["/stop"]]
 start_markup = ReplyKeyboardMarkup(
     keyboard=start_keyboard, resize_keyboard=True, one_time_keyboard=False
+)
+marketplace_markup = ReplyKeyboardMarkup(
+    keyboard=marketplace_keyboard, resize_keyboard=True, one_time_keyboard=True
 )
 stop_markup = ReplyKeyboardMarkup(
     keyboard=stop_keyboard, resize_keyboard=True, one_time_keyboard=False
@@ -66,22 +73,34 @@ async def parsing(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Start parsing."""
     if not update.message:
         raise MessageHandlerBotError
-    query = context.user_data.get("last_message") if context.user_data else None
+    if not context.user_data:
+        await update.message.reply_text("Dont make any actions. Context user is empty.")
+        return
+    query = context.user_data.get("last_message")
     if not query or not isinstance(query, str):
         await update.message.reply_text("Нет сохраненного запроса")
         return
-    await update.message.reply_text(
-        "Start parsing Wildberries...", reply_markup=stop_markup
+
+    marketplaces = context.user_data.get("choosen_markets")
+    if not marketplaces or not isinstance(marketplaces, list):
+        await update.message.reply_text("Нет выбранных маркетплейсов")
+        return
+
+    await update.message.reply_text("Start parsing...", reply_markup=stop_markup)
+    products = await find_best_offer(
+        query=query, marketplaces=marketplaces, count_products=5
     )
-    df = await start_parsing_wb(query=query, count_products=5)
 
     message = f"<b>Результаты для '{query}':</b>\n\n"
-    for idx, (_, row) in enumerate(df.iterrows(), start=1):
-        message += f"<b>{idx + 1}. {row['model']}</b>\n"
-        message += f"💰 Цена: {row['price']} ₽\n"
-        message += f"🔗 Ссылка: {row['url']}\n\n"
+    for idx, product in enumerate(products, start=1):
+        message += f"<b>{idx}. {product.title}</b>\n"
+        message += f"🔗 Ссылка: {product.link}\n\n"
+        message += f"💫 Рейтинг: {product.rating}\n\n"
+        message += f"🧮 Количество оценок: {product.rating_count}\n\n"
+        message += f"💰 Цена: {product.price} ₽\n"
 
     await update.message.reply_text(message, parse_mode="HTML")
+    context.user_data["choosen_markets"] = []
 
 
 async def info(update: Update, _: ContextTypes.DEFAULT_TYPE) -> None:
@@ -97,10 +116,23 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         raise MessageHandlerBotError
     if context.user_data is None:
         context.user_data = {}
-    context.user_data["last_message"] = update.message.text
+    if "last_message" not in context.user_data:
+        context.user_data["last_message"] = update.message.text
     if update.effective_chat:
         context.user_data["chat_id"] = update.effective_chat.id
-    await update.message.reply_text(f"Вы сказали: {update.message.text}")
+    await update.message.reply_text(
+        f"Ищем: {context.user_data.get('last_message')} на каких маркептлейсах?",
+        reply_markup=marketplace_markup,
+    )
+    if "choosen_markets" not in context.user_data:
+        context.user_data["choosen_markets"] = []
+    text = update.message.text
+    try:
+        market = MarketPlace(text)
+    except ValueError:
+        return
+    context.user_data["choosen_markets"].append(market)
+    logger.info("Marketplace chosen - %s", market)
 
 
 def build_bot(
