@@ -1,7 +1,7 @@
 services:
-  telegram_bot:
+  bestoffer:
     build: .
-    container_name: telegram_bot
+    container_name: bestoffer
     restart: always
     env_file: .env
     ports:
@@ -24,8 +24,8 @@ services:
     restart: unless-stopped
     shm_size: 2g
     ports:
-      - "4444:4444"  # Selenium WebDriver API
-      - "7900:7900"  # VNC Viewer
+      - "4444:4444"
+      - "7900:7900"
     environment:
       - SE_NODE_MAX_SESSIONS=1
       - SE_NODE_OVERRIDE_MAX_SESSIONS=true
@@ -38,6 +38,13 @@ services:
       timeout: 10s
       retries: 10
       start_period: 10s
+
+  redis:
+    image: redis:8.6
+    container_name: besoffer-cache
+    restart: always
+    ports:
+      - "6379:6379"
 
   postgres:
     image: postgres:14

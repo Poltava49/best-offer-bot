@@ -8,8 +8,9 @@ COPY pyproject.toml uv.lock ./
 
 RUN uv sync --frozen
 
-COPY . .
+COPY src .
+
 RUN useradd -m appuser && chown -R appuser:appuser /app
 USER appuser
 
-CMD ["uv", "run", "-m", "src.main"]
+CMD ["uv", "run", "fastapi", "dev"]
