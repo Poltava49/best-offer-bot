@@ -1,49 +1,29 @@
-"""
-Main entry point for the marketplace parser bot.
-
-This module initializes and runs the Telegram bot,
-handles database connection and manages the main event loop.
-"""
-
-import asyncio
-import logging
-import os
-import sys
-from typing import cast
-
-from src.bot.telegram_bot import run_bot
-from src.db.database import connect_to_db
-from src.exceptions import DatabaseConnectionError
-
-logging.basicConfig(
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
-)
-logger = logging.getLogger(__name__)
-
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-
-if not isinstance(BOT_TOKEN, str):
-    logger.info("BOT_TOKEN not found in .env file")
-    sys.exit(1)
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 
-async def main() -> None:
-    """Async main func."""
-    logger.info("Launching a marketplace parser bot...")
-    try:
-        connect_to_db()
-        logger.info("Connection to PostgreSQL successful!")
+app = FastAPI()
 
-    except DatabaseConnectionError:
-        logger.exception("Error connecting to database %s")
-
-    try:
-        await run_bot(cast("str", BOT_TOKEN))
-    except KeyboardInterrupt:
-        logger.info("Stopping the bot...")
-    except Exception:
-        logger.exception("Error in bot: %s")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
-if __name__ == "__main__":
-    asyncio.run(main())
+templates = Jinja2Templates(directory="static")
+
+
+@app.get("/")
+def read_root():
+    return {"Hello": "World"}
+
+
+@app.get("/items/{item_id}")
+def read_item(item_id: int, q: str | None = None):
+    return {"item_id": item_id, "q": q}
+
+
+@app.get("/front", response_class=HTMLResponse)
+def read_root(request: Request, name: str = "Anton"):
+    return templates.TemplateResponse(
+        request=request, name="front.html", context={"name": name}
+    )
