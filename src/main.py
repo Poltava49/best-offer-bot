@@ -1,44 +1,38 @@
-import redis
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+"""
+Main entry point for the marketplace parser bot.
+"""
 
-r = redis.Redis(host="localhost", port=6379, decode_responses=True)
+import logging
+
+from fastapi import FastAPI
+
+from src.db.database import connect_to_db
+from src.exceptions import DatabaseConnectionError
+
+logging.basicConfig(
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.INFO,
+)
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
 
+@app.on_event("startup")
+async def startup_event() -> None:
+    """Run on application startup."""
 
-templates = Jinja2Templates(directory="static")
+    logger.info("Launching marketplace parser bot...")
+
+    try:
+        connect_to_db()
+        logger.info("Connection to PostgreSQL successful!")
+
+    except DatabaseConnectionError:
+        logger.exception("Error connecting to database")
 
 
 @app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-@app.get("/items/{item_id}")
-def read_item(item_id: int, q: str | None = None):
-    return {"item_id": item_id, "q": q}
-
-
-@app.get("/front", response_class=HTMLResponse)
-def read_root(request: Request, age: int, name: str = "Anton"):
-    if age:
-        r.json().set(f"user:{name}", "$", {"name": name, "age": age})
-        return templates.TemplateResponse(
-            request=request, name="front.html", context={"name": name, "age": age}
-        )
-    age_cached = r.json().get(f"user:{name}", "$.age")
-    if age_cached:
-        return templates.TemplateResponse(
-            request=request,
-            name="front.html",
-            context={"name": name, "age": age_cached},
-        )
-    else:
-        return templates.TemplateResponse(
-            request=request, name="front.html", context={"name": name}
-        )
+async def root():
+    return {"status": "ok"}
