@@ -41,8 +41,8 @@ async def startup_event() -> None:
 async def home(request: Request):
     """Render home page."""
     return templates.TemplateResponse(
+            request,
         "index.html",
-        {"request": request},
     )
 
 
@@ -50,8 +50,8 @@ async def home(request: Request):
 async def parser_form(request: Request):
     """Render parser form."""
     return templates.TemplateResponse(
+            request,
         "parser_form.html",
-        {"request": request},
     )
 
 
@@ -80,12 +80,9 @@ async def parser_result(
     )
 
     return templates.TemplateResponse(
+        request,
         "result_table.html",
         {
-            "Название": title,
-            "Цена": price,
-            "Рейтинг": rating,
-            "Количество оценок": rating_count,
-            "Ссылка": link,
+            "products": products,
         },
     )
