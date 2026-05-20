@@ -4,8 +4,11 @@ Main entry point for the marketplace parser bot.
 
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Form, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
+from src.app import find_best_offer
 from src.db.database import connect_to_db
 from src.exceptions import DatabaseConnectionError
 
@@ -18,11 +21,12 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+templates = Jinja2Templates(directory="src/templates")
+
 
 @app.on_event("startup")
 async def startup_event() -> None:
     """Run on application startup."""
-
     logger.info("Launching marketplace parser bot...")
 
     try:
@@ -33,6 +37,55 @@ async def startup_event() -> None:
         logger.exception("Error connecting to database")
 
 
-@app.get("/")
-async def root():
-    return {"status": "ok"}
+@app.get("/", response_class=HTMLResponse)
+async def home(request: Request):
+    """Render home page."""
+    return templates.TemplateResponse(
+        "index.html",
+        {"request": request},
+    )
+
+
+@app.get("/parser", response_class=HTMLResponse)
+async def parser_form(request: Request):
+    """Render parser form."""
+    return templates.TemplateResponse(
+        "parser_form.html",
+        {"request": request},
+    )
+
+
+@app.post("/parser", response_class=HTMLResponse)
+async def parser_result(
+    request: Request,
+    marketplaces: str = Form(...),
+    product_name: str = Form(...),
+):
+    """
+    Receive form data and run marketplace parser.
+    """
+    logger.info(
+        "Start parsing marketplace=%s product=%s",
+        marketplaces,
+        product_name,
+    )
+
+    products = find_best_offer(
+        query=product_name, marketplaces=marketplaces, count_products=5
+    )
+
+    logger.info(
+        "Parsing completed. Found %s products",
+        len(products),
+    )
+
+    return templates.TemplateResponse(
+        "result_table.html",
+        {
+            "Название": title,
+            "Цена": price,
+            "Рейтинг": rating,
+            "Количество оценок": rating_count,
+            "Ссылка": link,
+        },
+    )

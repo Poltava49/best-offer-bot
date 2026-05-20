@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parsing Results</title>
+</head>
+<body>
+
+<h1>Результаты поиска</h1>
+
+<h3>Запрос: {{ query }}</h3>
+
+<table border="1" cellpadding="10">
+
+    <tr>
+        <th>Название</th>
+        <th>Цена</th>
+        <th>Рейтинг</th>
+        <th>Кол-во оценок</th>
+        <th>Ссылка</th>
+    </tr>
+
+    {% for product in products %}
+
+    <tr>
+        <td>{{ product.title }}</td>
+        <td>${{ product.price }}</td>
+        <td>{{ product.shop }}</td>
+        <td>{{ product.rating }}</td>
+        <td>{{ product.rating }}</td>
+    </tr>
+
+    {% endfor %}
+
+</table>
+
+</body>
+</html>
