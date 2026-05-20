@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 
 from src.app import find_best_offer
+from src.app.models import MarketPlace
 from src.db.database import connect_to_db
 from src.exceptions import DatabaseConnectionError
 
@@ -22,6 +23,20 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 templates = Jinja2Templates(directory="src/templates")
+
+
+def _parse_marketplace(value: str) -> MarketPlace:
+    """Convert form value to marketplace enum."""
+    aliases = {
+        "ozon": MarketPlace.OZON,
+        "wb": MarketPlace.WB,
+        "yandex": MarketPlace.YANDEX,
+    }
+    try:
+        return aliases[value]
+    except KeyError as exc:
+        msg = f"Unknown marketplace: {value}"
+        raise ValueError(msg) from exc
 
 
 @app.on_event("startup")
@@ -41,7 +56,7 @@ async def startup_event() -> None:
 async def home(request: Request):
     """Render home page."""
     return templates.TemplateResponse(
-            request,
+        request,
         "index.html",
     )
 
@@ -50,7 +65,7 @@ async def home(request: Request):
 async def parser_form(request: Request):
     """Render parser form."""
     return templates.TemplateResponse(
-            request,
+        request,
         "parser_form.html",
     )
 
@@ -61,17 +76,17 @@ async def parser_result(
     marketplaces: str = Form(...),
     product_name: str = Form(...),
 ):
-    """
-    Receive form data and run marketplace parser.
-    """
+    marketplace = _parse_marketplace(marketplaces)
     logger.info(
         "Start parsing marketplace=%s product=%s",
-        marketplaces,
+        marketplace,
         product_name,
     )
 
     products = find_best_offer(
-        query=product_name, marketplaces=marketplaces, count_products=5
+        query=product_name,
+        marketplaces=[marketplace],
+        count_products=5,
     )
 
     logger.info(
@@ -79,10 +94,13 @@ async def parser_result(
         len(products),
     )
 
+    print("=================")
+    print(products[0])
     return templates.TemplateResponse(
-        request,
-        "result_table.html",
-        {
+        request=request,
+        name="result_table.html",
+        context={
+            "request": request,
             "products": products,
         },
     )
