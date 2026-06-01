@@ -46,7 +46,7 @@ class WbParser(Parser):
             if i >= count:
                 break
             title_elem = product.select_one(self.attrs.title_class)
-            title = title_elem.text.strip() if title_elem else ""
+            title = title_elem.text.strip().replace("/","") if title_elem else ""
 
             rating_class_elem = product.select_one(self.attrs.rating_class)
             rating_class = rating_class_elem.text.strip() if rating_class_elem else ""
@@ -56,7 +56,8 @@ class WbParser(Parser):
                 rating_count_class_elem.text.strip() if rating_count_class_elem else ""
             )
 
-            href_value = product.get("href")
+            link_elem = product.select_one("a.product-card__link")
+            href_value = link_elem.get("href") if link_elem else None
             url = _normalize_href(str(href_value) if href_value is not None else None)
             if not url:
                 continue

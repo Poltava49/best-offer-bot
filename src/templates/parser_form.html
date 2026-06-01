@@ -99,12 +99,16 @@
         </div>
         <div class="field">
             <label>Маркетплейс</label>
-            <div class="select-wrap">
-                <select name="marketplaces" required>
-                    <option value="wb">Wildberries</option>
-                    <option value="ozon">Ozon</option>
-                    <option value="yandex">Яндекс Маркет</option>
-                </select>
+            <div class="checkboxes">
+                <label class="checkbox-label">
+                    <input type="checkbox" name="marketplaces" value="wb" checked> Wildberries
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="marketplaces" value="ozon"> Ozon
+                </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" name="marketplaces" value="yandex"> Яндекс Маркет
+                </label>
             </div>
         </div>
         <button type="submit" id="submitBtn">Найти</button>

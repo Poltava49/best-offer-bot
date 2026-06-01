@@ -95,7 +95,7 @@ async def parser_result(
     )
 
     print("=================")
-    print(products[0])
+    print(products)
     return templates.TemplateResponse(
         request=request,
         name="result_table.html",
