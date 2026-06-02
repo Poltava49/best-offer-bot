@@ -1,8 +1,7 @@
-"""
-Main entry point for the marketplace parser bot.
-"""
+"""Main entry point for the marketplace parser bot."""
 
 import logging
+from typing import Annotated
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
@@ -53,7 +52,7 @@ async def startup_event() -> None:
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
+async def home(request: Request) -> HTMLResponse:
     """Render home page."""
     return templates.TemplateResponse(
         request,
@@ -62,7 +61,7 @@ async def home(request: Request):
 
 
 @app.get("/parser", response_class=HTMLResponse)
-async def parser_form(request: Request):
+async def parser_form(request: Request) -> HTMLResponse:
     """Render parser form."""
     return templates.TemplateResponse(
         request,
@@ -73,9 +72,10 @@ async def parser_form(request: Request):
 @app.post("/parser", response_class=HTMLResponse)
 async def parser_result(
     request: Request,
-    marketplaces: str = Form(...),
-    product_name: str = Form(...),
-):
+    marketplaces: Annotated[str, Form(...)],
+    product_name: Annotated[str, Form(...)],
+) -> HTMLResponse:
+    """Return result of parsing."""
     marketplace = _parse_marketplace(marketplaces)
     logger.info(
         "Start parsing marketplace=%s product=%s",
@@ -94,8 +94,6 @@ async def parser_result(
         len(products),
     )
 
-    print("=================")
-    print(products)
     return templates.TemplateResponse(
         request=request,
         name="result_table.html",

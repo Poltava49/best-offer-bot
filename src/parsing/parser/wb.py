@@ -46,7 +46,7 @@ class WbParser(Parser):
             if i >= count:
                 break
             title_elem = product.select_one(self.attrs.title_class)
-            title = title_elem.text.strip().replace("/","") if title_elem else ""
+            title = title_elem.text.strip().replace("/", "") if title_elem else ""
 
             rating_class_elem = product.select_one(self.attrs.rating_class)
             rating_class = rating_class_elem.text.strip() if rating_class_elem else ""
