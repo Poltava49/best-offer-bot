@@ -62,6 +62,8 @@ class Parser(ABC):
 
         selenium_url = os.getenv("SELENIUM_URL", "http://selenium:4444/wd/hub")
         driver = webdriver.Remote(command_executor=selenium_url, options=options)
+        driver.set_page_load_timeout(30)
+        driver.set_script_timeout(30)
         output_file = Path(f"page_{uuid4().hex}.html")
         try:
             driver.get(url)

@@ -27,7 +27,7 @@ def get_parser(marketplace: models.MarketPlace) -> Parser:
             raise ValueError(msg)
 
 
-async def find_best_offer(
+def find_best_offer(
     query: str, marketplaces: list[models.MarketPlace], count_products: int = 10
 ) -> list[models.Product]:
     """Start selenium and parse products from marketlace."""
