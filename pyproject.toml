@@ -20,6 +20,8 @@ dependencies = [
   "python-telegram-bot>=22.6",
   "requests>=2.33.0",
   "selenium>=4.41.0",
+  "setuptools>=82.0.1",
+  "undetected-chromedriver>=3.5.5",
   "uvicorn[standard]>=0.47.0",
 ]
 
