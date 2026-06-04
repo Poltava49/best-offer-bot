@@ -24,5 +24,6 @@ ozon_attr = ParsingAttributes(
 )
 
 MARKETPLACES_PARSERS: dict[MarketPlace, Parser] = {
-    MarketPlace.WB: WbParser(wb_attr)
+    MarketPlace.WB: WbParser(wb_attr),
+    MarketPlace.OZON: OzonParser(ozon_attr)
 }
