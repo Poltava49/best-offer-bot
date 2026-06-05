@@ -3,6 +3,7 @@
 from src.app.models import MarketPlace
 from src.parsing import Parser, ParsingAttributes
 from src.parsing.parser.wb import WbParser
+from src.parsing.parser.yandex import YandexParser
 
 wb_attr = ParsingAttributes(
     title_class=".product-card__name",
@@ -13,4 +14,16 @@ wb_attr = ParsingAttributes(
     market=MarketPlace.WB,
 )
 
-MARKETPLACES_PARSERS: dict[MarketPlace, Parser] = {MarketPlace.WB: WbParser(wb_attr)}
+yandex_attr = ParsingAttributes(
+    title_class='[data-auto="snippet-title"]',
+    price_class='[data-auto="snippet-price-current"]',
+    rating_class=".ds-rating__value",
+    rating_count_class='[data-auto="reviews"] .ds-text_color_text-secondary',
+    product_card_selector='article[data-auto="searchOrganic"]',
+    market=MarketPlace.YANDEX,
+)
+
+MARKETPLACES_PARSERS: dict[MarketPlace, Parser] = {
+    MarketPlace.WB: WbParser(wb_attr),
+    MarketPlace.YANDEX: YandexParser(yandex_attr),
+}

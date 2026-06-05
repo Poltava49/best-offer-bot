@@ -22,6 +22,8 @@ def get_parser(marketplace: models.MarketPlace) -> Parser:
     match marketplace:
         case models.MarketPlace.WB:
             return MARKETPLACES_PARSERS[models.MarketPlace.WB]
+        case models.MarketPlace.YANDEX:
+            return MARKETPLACES_PARSERS[models.MarketPlace.YANDEX]
         case _:
             msg = f"Unknown marketplace: {marketplace}"
             raise ValueError(msg)
