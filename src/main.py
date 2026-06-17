@@ -72,20 +72,20 @@ async def parser_form(request: Request) -> HTMLResponse:
 @app.post("/parser", response_class=HTMLResponse)
 async def parser_result(
     request: Request,
-    marketplaces: Annotated[str, Form(...)],
+    marketplaces: Annotated[list[str], Form(...)],
     product_name: Annotated[str, Form(...)],
 ) -> HTMLResponse:
     """Return result of parsing."""
-    marketplace = _parse_marketplace(marketplaces)
+    selected_markets = [_parse_marketplace(m) for m in marketplaces]
     logger.info(
         "Start parsing marketplace=%s product=%s",
-        marketplace,
+        selected_markets,
         product_name,
     )
 
     products = find_best_offer(
         query=product_name,
-        marketplaces=[marketplace],
+        marketplaces=selected_markets,
         count_products=5,
     )
 
