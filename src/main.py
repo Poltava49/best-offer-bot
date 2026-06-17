@@ -1,7 +1,7 @@
 """Main entry point for the marketplace parser bot."""
 
 import logging
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse
@@ -72,7 +72,7 @@ async def parser_form(request: Request) -> HTMLResponse:
 @app.post("/parser", response_class=HTMLResponse)
 async def parser_result(
     request: Request,
-    marketplaces: Annotated[List[str], Form(...)],
+    marketplaces: Annotated[list[str], Form(...)],
     product_name: Annotated[str, Form(...)],
 ) -> HTMLResponse:
     """Return result of parsing."""

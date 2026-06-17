@@ -1,4 +1,4 @@
-"""Custom wildberries parser with selenium."""
+"""Custom yandex market parser with selenium."""
 
 import logging
 import re
@@ -16,7 +16,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def _normalize_href(value: str | None) -> str | None:
+def _normalize_href(value: str | None | list[str]) -> str | None:
     if not value:
         return None
     if isinstance(value, list):
@@ -25,7 +25,7 @@ def _normalize_href(value: str | None) -> str | None:
 
 
 class YandexParser(Parser):
-    """Create parser the Ozon marketplace."""
+    """Create parser the Yandex Market marketplace."""
 
     def __init__(self, attributes: ParsingAttributes) -> None:
         """Initialize class with base schema for parsing."""
@@ -52,9 +52,14 @@ class YandexParser(Parser):
             if not link_elem:
                 continue
             href = link_elem.get("href")
-            if not href:
+            normalized_href = _normalize_href(href)
+            if not normalized_href:
                 continue
-            url = base_url + href if href.startswith("/") else href
+            url = (
+                base_url + normalized_href
+                if normalized_href.startswith("/")
+                else normalized_href
+            )
 
             title_elem = card.select_one(self.attrs.title_class)
             title = title_elem.text.strip() if title_elem else ""
