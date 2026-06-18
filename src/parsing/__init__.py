@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
-from selenium import webdriver
+import undetected_chromedriver as uc
 
 from src.app import models
 
@@ -47,21 +47,24 @@ class Parser(ABC):
         """Get product of parsing and take to bot."""
 
     def _get_page_with_selenium(self, url: str) -> str:
-        """Parse HTML page Wildberries by Selenium."""
-        options = webdriver.ChromeOptions()
-        options.add_argument("--disable-blink-features=AutomationControlled")
+        """Parse HTML page using undetected-chromedriver to bypass bot detection."""
+        options = uc.ChromeOptions()
+        options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
-        options.add_argument("--disable-webrtc")
-        options.add_argument("--hide-scrollbars")
+        options.add_argument("--window-size=1920,1080")
         options.add_argument("--disable-notifications")
-        options.add_argument("--start-maximized")
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option("useAutomationExtension", value=False)
 
-        selenium_url = os.getenv("SELENIUM_URL", "http://selenium:4444/wd/hub")
-        driver = webdriver.Remote(command_executor=selenium_url, options=options)
+        chromium_path = os.getenv("CHROMIUM_PATH", "/usr/bin/chromium")
+        chromedriver_path = os.getenv("CHROMEDRIVER_PATH", "/usr/bin/chromedriver")
+
+        driver = uc.Chrome(
+            options=options,
+            driver_executable_path=chromedriver_path,
+            browser_executable_path=chromium_path,
+            version_main=None,
+        )
         driver.set_page_load_timeout(30)
         driver.set_script_timeout(30)
         output_file = Path(f"page_{uuid4().hex}.html")

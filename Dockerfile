@@ -5,8 +5,16 @@ COPY --from=docker.io/astral/uv:0.11 /uv /uvx /bin/
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends chromium chromium-driver \
+    && apt-get install -y --no-install-recommends \
+        chromium \
+        chromium-driver \
+        libglib2.0-0 \
+        libnss3 \
+        libfontconfig1 \
     && rm -rf /var/lib/apt/lists/*
+
+ENV CHROMIUM_PATH=/usr/bin/chromium
+ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
 
 COPY pyproject.toml uv.lock ./
 
