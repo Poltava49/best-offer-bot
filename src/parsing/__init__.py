@@ -16,6 +16,7 @@ from uuid import uuid4
 import undetected_chromedriver as uc
 
 from src.app import models
+from src.captcha import handler as captcha_handler
 
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO
@@ -49,7 +50,6 @@ class Parser(ABC):
     def _get_page_with_selenium(self, url: str) -> str:
         """Parse HTML page using undetected-chromedriver to bypass bot detection."""
         options = uc.ChromeOptions()
-        options.add_argument("--headless=new")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-gpu")
@@ -72,6 +72,9 @@ class Parser(ABC):
             driver.get(url)
             logger.info("Open search - %s", url)
             time.sleep(5)
+
+            captcha_handler.handle(driver)
+
             for _ in range(3):
                 driver.execute_script("window.scrollBy(0, 500);")
                 time.sleep(1)

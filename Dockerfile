@@ -11,10 +11,12 @@ RUN apt-get update \
         libglib2.0-0 \
         libnss3 \
         libfontconfig1 \
+        xvfb \
+        xauth \
     && rm -rf /var/lib/apt/lists/*
 
 ENV CHROMIUM_PATH=/usr/bin/chromium
-ENV CHROMEDRIVER_PATH=/usr/bin/chromedriver
+ENV CHROMEDRIVER_PATH=/app/chromedriver
 
 COPY pyproject.toml uv.lock ./
 
@@ -24,8 +26,12 @@ RUN uv pip install --system -r requirements.txt
 
 COPY . .
 
-RUN useradd -m appuser && chown -R appuser:appuser /app
+RUN useradd -m appuser \
+    && cp /usr/bin/chromedriver /app/chromedriver \
+    && chown -R appuser:appuser /app
+
+RUN chmod +x /app/entrypoint.sh
 
 USER appuser
 
-CMD ["python", "-m", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["/app/entrypoint.sh"]
