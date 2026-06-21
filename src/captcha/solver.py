@@ -39,7 +39,7 @@ def _get_piece_mask(puzzle_img: np.ndarray) -> np.ndarray:
 
 
 def _find_gap_x(background_img: np.ndarray, puzzle_img: np.ndarray) -> int | None:
-    """Find x-coordinate of matching cutout using contour shape matching."""
+    """Find x-coordinate of matching cutout using ring-border template matching."""
     piece_mask = _get_piece_mask(puzzle_img)
     ph, pw = piece_mask.shape
 
@@ -50,40 +50,22 @@ def _find_gap_x(background_img: np.ndarray, puzzle_img: np.ndarray) -> int | Non
         logger.warning("Puzzle piece larger than background")
         return None
 
-    # get puzzle piece contour
-    piece_contours, _ = cv2.findContours(piece_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if not piece_contours:
-        logger.warning("No contours found in puzzle piece")
-        return None
-    piece_contour = max(piece_contours, key=cv2.contourArea)
-    piece_area = cv2.contourArea(piece_contour)
+    # create ring template: only the border of the puzzle piece shape
+    # erode mask and subtract — leaves just the outline
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    piece_eroded = cv2.erode(piece_mask, kernel, iterations=3)
+    piece_border = cv2.subtract(piece_mask, piece_eroded)
 
-    # threshold background to find cutout regions (they differ in brightness)
-    bg_blur = cv2.GaussianBlur(bg_gray, (5, 5), 0)
-    # find regions brighter than background median (cutouts tend to be lighter)
-    median_val = float(np.median(bg_blur))
-    _, bg_thresh_light = cv2.threshold(bg_blur, median_val + 10, 255, cv2.THRESH_BINARY)
-    # also try darker threshold (for dark-style captchas)
-    _, bg_thresh_dark = cv2.threshold(bg_blur, median_val - 10, 255, cv2.THRESH_BINARY_INV)
+    # enhance background edges to make cutout borders visible
+    bg_blur = cv2.GaussianBlur(bg_gray, (3, 3), 0)
+    bg_edges = cv2.Canny(bg_blur, 20, 80)
 
-    best_x = 0
-    best_y = 0
-    best_score = float("inf")  # lower = better for matchShapes
+    # match the piece border shape against background edges
+    result = cv2.matchTemplate(bg_edges, piece_border, cv2.TM_CCOEFF_NORMED)
+    _, max_val, _, max_loc = cv2.minMaxLoc(result)
 
-    for bg_thresh in (bg_thresh_light, bg_thresh_dark):
-        contours, _ = cv2.findContours(bg_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-        for cnt in contours:
-            area = cv2.contourArea(cnt)
-            # filter by area — must be reasonably close to puzzle piece area
-            if area < piece_area * 0.3 or area > piece_area * 3.0:
-                continue
-            # compare shape using Hu moments (0 = identical shape)
-            score = cv2.matchShapes(piece_contour, cnt, cv2.CONTOURS_MATCH_I2, 0)
-            if score < best_score:
-                best_score = score
-                best_x, best_y = cv2.boundingRect(cnt)[:2]
-
-    logger.info("Best shape match score: %.4f at x=%d y=%d", best_score, best_x, best_y)
+    best_x, best_y = max_loc
+    logger.info("Ring match score: %.3f at x=%d y=%d", max_val, best_x, best_y)
 
     # save debug image with detected region highlighted
     try:
@@ -102,11 +84,22 @@ def solve(image_url: str, puzzle_url: str, puzzle_start_x: int, cookies: dict) -
     background = _download_image(image_url, cookies)
     puzzle = _download_image(puzzle_url, cookies)
 
-    if background is None or puzzle is None:
+    if background is None:
+        logger.warning("Failed to download background image")
+        return None
+    if puzzle is None:
+        logger.warning("Failed to download puzzle image")
         return None
 
-    gap_x = _find_gap_x(background, puzzle)
+    logger.info("Images downloaded: bg=%s puzzle=%s", background.shape, puzzle.shape)
+
+    try:
+        gap_x = _find_gap_x(background, puzzle)
+    except Exception as e:
+        logger.warning("_find_gap_x raised exception: %s", e, exc_info=True)
+        return None
     if gap_x is None:
+        logger.warning("_find_gap_x returned None")
         return None
 
     drag_distance = gap_x - puzzle_start_x
