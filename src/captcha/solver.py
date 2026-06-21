@@ -39,7 +39,7 @@ def _get_piece_mask(puzzle_img: np.ndarray) -> np.ndarray:
 
 
 def _find_gap_x(background_img: np.ndarray, puzzle_img: np.ndarray) -> int | None:
-    """Find x-coordinate of matching cutout using edge contour matching."""
+    """Find x-coordinate of matching cutout using contour shape matching."""
     piece_mask = _get_piece_mask(puzzle_img)
     ph, pw = piece_mask.shape
 
@@ -50,47 +50,40 @@ def _find_gap_x(background_img: np.ndarray, puzzle_img: np.ndarray) -> int | Non
         logger.warning("Puzzle piece larger than background")
         return None
 
-    # get contour edges of puzzle piece shape
-    piece_edges = cv2.Canny(piece_mask, 50, 150)
-    # dilate slightly to allow small misalignments
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    piece_edges_dilated = cv2.dilate(piece_edges, kernel, iterations=1)
+    # get puzzle piece contour
+    piece_contours, _ = cv2.findContours(piece_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if not piece_contours:
+        logger.warning("No contours found in puzzle piece")
+        return None
+    piece_contour = max(piece_contours, key=cv2.contourArea)
+    piece_area = cv2.contourArea(piece_contour)
 
-    # get gradient magnitude of background — highlights cutout borders
-    bg_blur = cv2.GaussianBlur(bg_gray, (3, 3), 0)
-    grad_x = cv2.Sobel(bg_blur, cv2.CV_64F, 1, 0, ksize=3)
-    grad_y = cv2.Sobel(bg_blur, cv2.CV_64F, 0, 1, ksize=3)
-    bg_gradient = cv2.magnitude(grad_x, grad_y)
-    bg_gradient = cv2.normalize(bg_gradient, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
+    # threshold background to find cutout regions (they differ in brightness)
+    bg_blur = cv2.GaussianBlur(bg_gray, (5, 5), 0)
+    # find regions brighter than background median (cutouts tend to be lighter)
+    median_val = float(np.median(bg_blur))
+    _, bg_thresh_light = cv2.threshold(bg_blur, median_val + 10, 255, cv2.THRESH_BINARY)
+    # also try darker threshold (for dark-style captchas)
+    _, bg_thresh_dark = cv2.threshold(bg_blur, median_val - 10, 255, cv2.THRESH_BINARY_INV)
 
-    # method 1: match puzzle contour edges against background gradient
-    result_edge = cv2.matchTemplate(
-        bg_gradient, piece_edges_dilated, cv2.TM_CCOEFF_NORMED
-    )
-    _, max_val_edge, _, max_loc_edge = cv2.minMaxLoc(result_edge)
+    best_x = 0
+    best_y = 0
+    best_score = float("inf")  # lower = better for matchShapes
 
-    # method 2: match puzzle contour against background edges (Canny)
-    bg_edges = cv2.Canny(bg_gray, 30, 100)
-    result_canny = cv2.matchTemplate(
-        bg_edges, piece_edges_dilated, cv2.TM_CCOEFF_NORMED
-    )
-    _, max_val_canny, _, max_loc_canny = cv2.minMaxLoc(result_canny)
+    for bg_thresh in (bg_thresh_light, bg_thresh_dark):
+        contours, _ = cv2.findContours(bg_thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for cnt in contours:
+            area = cv2.contourArea(cnt)
+            # filter by area — must be reasonably close to puzzle piece area
+            if area < piece_area * 0.3 or area > piece_area * 3.0:
+                continue
+            # compare shape using Hu moments (0 = identical shape)
+            score = cv2.matchShapes(piece_contour, cnt, cv2.CONTOURS_MATCH_I2, 0)
+            if score < best_score:
+                best_score = score
+                best_x, best_y = cv2.boundingRect(cnt)[:2]
 
-    logger.info("Edge score: %.3f at %s | Gradient score: %.3f at %s",
-                max_val_canny, max_loc_canny, max_val_edge, max_loc_edge)
-
-    # pick method with higher confidence
-    if max_val_edge >= max_val_canny:
-        best_loc = max_loc_edge
-        best_score = max_val_edge
-        method = "gradient"
-    else:
-        best_loc = max_loc_canny
-        best_score = max_val_canny
-        method = "canny"
-
-    best_x, best_y = best_loc
-    logger.info("Using %s method, score=%.3f at x=%d y=%d", method, best_score, best_x, best_y)
+    logger.info("Best shape match score: %.4f at x=%d y=%d", best_score, best_x, best_y)
 
     # save debug image with detected region highlighted
     try:
