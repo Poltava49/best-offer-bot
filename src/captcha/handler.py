@@ -62,6 +62,27 @@ def handle(driver) -> bool:
     puzzle_start_x = _parse_left_px(puzzle_style)
     cookies = {c["name"]: c["value"] for c in driver.get_cookies()}
 
+    # get scale factor from captcha container CSS var --scale
+    try:
+        scale_str = driver.execute_script(
+            "return getComputedStyle(document.getElementById('captcha'))"
+            ".getPropertyValue('--scale').trim()"
+        )
+        scale = float(scale_str) if scale_str else 1.0
+    except Exception:
+        scale = 1.0
+    logger.info("Captcha scale: %.2f, puzzle_start_x: %d", scale, puzzle_start_x)
+
+    # get actual rendered width of slider track
+    try:
+        slider_bg = driver.find_element(By.ID, "slider-background")
+        slider_width = driver.execute_script(
+            "return arguments[0].offsetWidth", slider_bg
+        )
+    except Exception:
+        slider_width = None
+    logger.info("Slider track width: %s", slider_width)
+
     drag_distance = solver.solve(image_url, puzzle_url, puzzle_start_x, cookies)
 
     if drag_distance is None:
@@ -69,8 +90,11 @@ def handle(driver) -> bool:
         collector.collect(driver)
         return False
 
-    logger.info("Dragging slider by %dpx", drag_distance)
-    _human_drag(driver, slider_el, drag_distance)
+    # scale drag distance to match rendered size
+    scaled_distance = int(drag_distance * scale)
+    logger.info("drag_distance=%d, scale=%.2f, scaled=%d, slider_width=%s",
+                drag_distance, scale, scaled_distance, slider_width)
+    _human_drag(driver, slider_el, scaled_distance)
     time.sleep(2)
 
     if collector.is_captcha_page(driver):
