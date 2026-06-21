@@ -39,11 +39,10 @@ def _get_piece_mask(puzzle_img: np.ndarray) -> np.ndarray:
 
 
 def _find_gap_x(background_img: np.ndarray, puzzle_img: np.ndarray) -> int | None:
-    """Find x-coordinate of matching cutout using darkness scanning."""
+    """Find x-coordinate of matching cutout using edge contour matching."""
     piece_mask = _get_piece_mask(puzzle_img)
     ph, pw = piece_mask.shape
 
-    # convert background to grayscale — cutouts appear darker
     bg_gray = cv2.cvtColor(background_img[:, :, :3], cv2.COLOR_BGR2GRAY)
     bg_h, bg_w = bg_gray.shape
 
@@ -51,28 +50,47 @@ def _find_gap_x(background_img: np.ndarray, puzzle_img: np.ndarray) -> int | Non
         logger.warning("Puzzle piece larger than background")
         return None
 
-    # invert: dark areas become bright → we look for maximum
-    bg_inv = 255 - bg_gray.astype(np.float32)
+    # get contour edges of puzzle piece shape
+    piece_edges = cv2.Canny(piece_mask, 50, 150)
+    # dilate slightly to allow small misalignments
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
+    piece_edges_dilated = cv2.dilate(piece_edges, kernel, iterations=1)
 
-    # normalize mask to 0..1
-    mask_norm = piece_mask.astype(np.float32) / 255.0
-    mask_area = mask_norm.sum()
+    # get gradient magnitude of background — highlights cutout borders
+    bg_blur = cv2.GaussianBlur(bg_gray, (3, 3), 0)
+    grad_x = cv2.Sobel(bg_blur, cv2.CV_64F, 1, 0, ksize=3)
+    grad_y = cv2.Sobel(bg_blur, cv2.CV_64F, 0, 1, ksize=3)
+    bg_gradient = cv2.magnitude(grad_x, grad_y)
+    bg_gradient = cv2.normalize(bg_gradient, None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
-    best_score = -1.0
-    best_x = 0
-    best_y = 0
+    # method 1: match puzzle contour edges against background gradient
+    result_edge = cv2.matchTemplate(
+        bg_gradient, piece_edges_dilated, cv2.TM_CCOEFF_NORMED
+    )
+    _, max_val_edge, _, max_loc_edge = cv2.minMaxLoc(result_edge)
 
-    # slide the mask across the background
-    for x in range(bg_w - pw):
-        for y in range(bg_h - ph):
-            region = bg_inv[y:y + ph, x:x + pw]
-            score = float((region * mask_norm).sum()) / mask_area
-            if score > best_score:
-                best_score = score
-                best_x = x
-                best_y = y
+    # method 2: match puzzle contour against background edges (Canny)
+    bg_edges = cv2.Canny(bg_gray, 30, 100)
+    result_canny = cv2.matchTemplate(
+        bg_edges, piece_edges_dilated, cv2.TM_CCOEFF_NORMED
+    )
+    _, max_val_canny, _, max_loc_canny = cv2.minMaxLoc(result_canny)
 
-    logger.info("Best darkness score: %.2f at x=%d y=%d", best_score, best_x, best_y)
+    logger.info("Edge score: %.3f at %s | Gradient score: %.3f at %s",
+                max_val_canny, max_loc_canny, max_val_edge, max_loc_edge)
+
+    # pick method with higher confidence
+    if max_val_edge >= max_val_canny:
+        best_loc = max_loc_edge
+        best_score = max_val_edge
+        method = "gradient"
+    else:
+        best_loc = max_loc_canny
+        best_score = max_val_canny
+        method = "canny"
+
+    best_x, best_y = best_loc
+    logger.info("Using %s method, score=%.3f at x=%d y=%d", method, best_score, best_x, best_y)
 
     # save debug image with detected region highlighted
     try:
