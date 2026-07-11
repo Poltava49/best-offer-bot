@@ -6,6 +6,8 @@ This package contains the Selenium methods and  initialization logic.
 
 import logging
 
+from src.app.analyzer import BestOfferAnalyzer
+from src.app.models import Product
 from src.parsing import Parser
 from src.parsing.parser.config import MARKETPLACES_PARSERS
 
@@ -31,13 +33,15 @@ def get_parser(marketplace: models.MarketPlace) -> Parser:
 
 def find_best_offer(
     query: str, marketplaces: list[models.MarketPlace], count_products: int = 10
-) -> list[models.Product]:
+) -> list[Product]:
     """Start selenium and parse products from marketlace."""
     finall_results: list[models.Product] = []
+    analyzer = BestOfferAnalyzer()
     for marketplace in marketplaces:
         try:
             parser = get_parser(marketplace)
             finall_results.extend(parser.get_products(query, count=count_products))
         except Exception:
             logger.exception("Error parsing %s", marketplace)
-    return finall_results
+    top_records = analyzer.get_top_n_products(n=count_products, products=finall_results)
+    return [Product(**record) for record in top_records]
