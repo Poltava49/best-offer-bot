@@ -5,6 +5,7 @@ This package contains the Selenium methods and  initialization logic.
 """
 
 import logging
+from typing import Any
 
 from src.app.analyzer import BestOfferAnalyzer
 from src.parsing import Parser
@@ -32,7 +33,7 @@ def get_parser(marketplace: models.MarketPlace) -> Parser:
 
 def find_best_offer(
     query: str, marketplaces: list[models.MarketPlace], count_products: int = 10
-) -> list[models.Product]:
+) -> list[dict[str, Any]]:
     """Start selenium and parse products from marketlace."""
     finall_results: list[models.Product] = []
     analyzer = BestOfferAnalyzer()
